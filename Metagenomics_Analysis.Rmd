@@ -1,7 +1,6 @@
 ---
 title: "Metagenomics Analysis"
 author: "Michelle Hagen"
-date: "`r format(Sys.time(), '%Y-%m-%d')`"
 output:
     html_document:
         keep_md: yes
@@ -9,7 +8,7 @@ output:
         toc_float:
           collapse: no
         fig_caption: yes
-        code_folding: hide
+        code_folding: show
     pdf_document:
         fig_caption: yes
         fig_height: 9
