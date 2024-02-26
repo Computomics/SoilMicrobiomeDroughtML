@@ -386,7 +386,7 @@ aldex_marker <- marker_table(aldex_microbiomeMarker) %>%
   left_join(taxa_info, by = "ASV")
 ```
 
-### ANCOMBC
+### ANCOM-BC2
 
 ```{r}
 ancom_da <- ancombc2(data = ps_rare_filtered, tax_level = NULL, fix_formula = "Watering_Regm",
@@ -402,7 +402,7 @@ ancom_res <- data.frame(
   q_val = unlist(ancom_da$res$q_Watering_RegmDrought),
   diff = unlist(ancom_da$res$diff_Watering_RegmDrought))
 
-ancombc_marker <- ancom_res %>% 
+ancombc2_marker <- ancom_res %>% 
   filter(q_val < 0.05) %>%  # adjusted p-values
   arrange(order(gtools::mixedorder(ASV))) %>%
   left_join(taxa_info) %>% 
@@ -419,7 +419,7 @@ ancombc_marker <- ancom_res %>%
 
 ## DAA on all ranks
 
-ANCOMBC, ALDEx2 and DESeq2 are selected as the top 3 best performing tools for 
+ANCOM-BC2, ALDEx2 and DESeq2 are selected as the top 3 best performing tools for 
 this dataset and therefore used on all taxonomic ranks (phylum-genus).
 
 ```{r select taxa on ranks}
@@ -518,7 +518,7 @@ Phylum_aldex_marker <- marker_table(Phylum_aldex_microbiomeMarker) %>%
   inner_join(Phylum_tax, by = "Phylum") %>% 
   mutate(tool="ALDEx2")
 
-# ANCOMBC
+# ANCOM-BC2
 Phylum_ancom_da <- ancombc2(
   data = ps_rare_filtered,
   tax_level = "Phylum",
@@ -539,11 +539,11 @@ Phylum_ancom_res <- data.frame(
   q_val = unlist(Phylum_ancom_da$res$q_Watering_RegmDrought),  # adjusted p-values
   diff = unlist(Phylum_ancom_da$res$diff_Watering_RegmDrought)) # TRUE if the taxon is significant (has q less than alpha 0.05)
 
-Phylum_sig_ancombc <- Phylum_ancom_res %>% 
+Phylum_sig_ancombc2 <- Phylum_ancom_res %>% 
   filter(q_val < 0.05) %>%  # adjusted p-values
   arrange(order(gtools::mixedorder(ASV)))
 
-Phylum_ancombc_marker <- Phylum_sig_ancombc %>% 
+Phylum_ancombc2_marker <- Phylum_sig_ancombc2 %>% 
   mutate(enrich_group = case_when(
     lfc >=0 ~ "Drought",
     lfc <0 ~ "Control"
@@ -628,7 +628,7 @@ Class_aldex_marker <- marker_table(Class_aldex_microbiomeMarker) %>%
   inner_join(Class_tax, by = "Class") %>% 
   mutate(tool = "ALDEx2")
 
-# ANCOMBC
+# ANCOM-BC2
 Class_ancom_da <- ancombc2(
   data = ps_rare_filtered,
   tax_level = "Class",
@@ -649,11 +649,11 @@ Class_ancom_res <- data.frame(
   q_val = unlist(Class_ancom_da$res$q_Watering_RegmDrought),  # adjusted p-values
   diff = unlist(Class_ancom_da$res$diff_Watering_RegmDrought)) # TRUE if the taxon is significant (has q less than alpha 0.05)
 
-Class_sig_ancombc <- Class_ancom_res %>% 
+Class_sig_ancombc2 <- Class_ancom_res %>% 
   filter(q_val < 0.05) %>%  # adjusted p-values
   arrange(order(gtools::mixedorder(ASV)))
 
-Class_ancombc_marker <- Class_sig_ancombc %>% 
+Class_ancombc2_marker <- Class_sig_ancombc2 %>% 
   mutate(enrich_group = case_when(
     lfc >=0 ~ "Drought",
     lfc <0 ~ "Control"
@@ -738,7 +738,7 @@ Order_aldex_marker <- marker_table(Order_aldex_microbiomeMarker) %>%
   inner_join(Order_tax, by = "Order") %>% 
   mutate(tool = "ALDEx2")
 
-# ANCOMBC
+# ANCOM-BC2
 Order_ancom_da <- ancombc2(
   data = ps_rare_filtered,
   tax_level = "Order",
@@ -759,11 +759,11 @@ Order_ancom_res <- data.frame(
   q_val = unlist(Order_ancom_da$res$q_Watering_RegmDrought),  # adjusted p-values
   diff = unlist(Order_ancom_da$res$diff_Watering_RegmDrought)) # TRUE if the taxon is significant (has q less than alpha 0.05)
 
-Order_sig_ancombc <- Order_ancom_res %>% 
+Order_sig_ancombc2 <- Order_ancom_res %>% 
   filter(q_val < 0.05) %>%  # adjusted p-values
   arrange(order(gtools::mixedorder(ASV)))
 
-Order_ancombc_marker <- Order_sig_ancombc %>% 
+Order_ancombc2_marker <- Order_sig_ancombc2 %>% 
   mutate(enrich_group = case_when(
     lfc >=0 ~ "Drought",
     lfc <0 ~ "Control"
@@ -850,7 +850,7 @@ Family_aldex_marker <- marker_table(Family_aldex_microbiomeMarker) %>%
   inner_join(Family_tax, by = "Family") %>% 
   mutate(tool = "ALDEx2")
 
-# ANCOMBC
+# ANCOM-BC2
 Family_ancom_da <- ancombc2(
   data = ps_rare_filtered,
   tax_level = "Family",
@@ -871,11 +871,11 @@ Family_ancom_res <- data.frame(
   q_val = unlist(Family_ancom_da$res$q_Watering_RegmDrought),  # adjusted p-values
   diff = unlist(Family_ancom_da$res$diff_Watering_RegmDrought)) # TRUE if the taxon is significant (has q less than alpha 0.05)
 
-Family_sig_ancombc <- Family_ancom_res %>% 
+Family_sig_ancombc2 <- Family_ancom_res %>% 
   filter(q_val < 0.05) %>%  # adjusted p-values
   arrange(order(gtools::mixedorder(ASV)))
 
-Family_ancombc_marker <- Family_sig_ancombc %>% 
+Family_ancombc2_marker <- Family_sig_ancombc2 %>% 
   mutate(enrich_group = case_when(
     lfc >=0 ~ "Drought",
     lfc <0 ~ "Control"
@@ -967,7 +967,7 @@ Genus_aldex_marker <- marker_table(Genus_aldex_microbiomeMarker) %>%
   inner_join(Genus_tax, by = "Genus") %>% 
   mutate(tool = "ALDEx2")
 
-# ANCOMBC
+# ANCOM-BC2
 Genus_ancom_da <- ancombc2(
   data = ps_rare_filtered,
   tax_level = "Genus",
@@ -988,11 +988,11 @@ Genus_ancom_res <- data.frame(
   q_val = unlist(Genus_ancom_da$res$q_Watering_RegmDrought),  # adjusted p-values
   diff = unlist(Genus_ancom_da$res$diff_Watering_RegmDrought)) # TRUE if the taxon is significant (has q less than alpha 0.05)
 
-Genus_sig_ancombc <- Genus_ancom_res %>% 
+Genus_sig_ancombc2 <- Genus_ancom_res %>% 
   filter(q_val < 0.05) %>%  # adjusted p-values
   arrange(order(gtools::mixedorder(ASV)))
 
-Genus_ancombc_marker <- Genus_sig_ancombc %>% 
+Genus_ancombc2_marker <- Genus_sig_ancombc2 %>% 
   mutate(enrich_group = case_when(
     lfc >=0 ~ "Drought",
     lfc <0 ~ "Control"
@@ -1018,23 +1018,23 @@ Genus_ancombc_marker <- Genus_sig_ancombc %>%
 ```{r Combine marker tables}
 Phylum_marker <- Phylum_deseq_marker %>% 
   bind_rows(Phylum_aldex_marker) %>% 
-  bind_rows(Phylum_ancombc_marker)
+  bind_rows(Phylum_ancombc2_marker)
 
 Class_marker <- Class_deseq_marker %>% 
   bind_rows(Class_aldex_marker) %>% 
-  bind_rows(Class_ancombc_marker)
+  bind_rows(Class_ancombc2_marker)
 
 Order_marker <- Order_deseq_marker %>% 
   bind_rows(Order_aldex_marker) %>% 
-  bind_rows(Order_ancombc_marker)
+  bind_rows(Order_ancombc2_marker)
 
 Family_marker <- Family_deseq_marker %>% 
   bind_rows(Family_aldex_marker) %>% 
-  bind_rows(Family_ancombc_marker)
+  bind_rows(Family_ancombc2_marker)
 
 Genus_marker <- Genus_deseq_marker %>% 
   bind_rows(Genus_aldex_marker) %>% 
-  bind_rows(Genus_ancombc_marker)
+  bind_rows(Genus_ancombc2_marker)
 ```
 
 ```{r save marker tables}
@@ -1048,13 +1048,13 @@ save(Genus_marker, file = "data/Genus_marker.RData")
 ## Display taxa/ASV intersection using UpSet plots
 
 ```{r intersections}
-ASV_intersection <- list(Wilcox = sig_wilcox_r$ASV, DESeq2 = deseq_marker$ASV, edgeR = edger_marker$ASV, ALDEx2 = aldex_marker$ASV, ANCOMBC = ancombc_marker$ASV)
-top3_ASV_intersection <- list(DESeq2 = deseq_marker$ASV, ALDEx2 = aldex_marker$ASV, ANCOMBC = ancombc_marker$ASV)
-Phylum_intersection <- list(DESeq2 = Phylum_deseq_marker$Phylum, ALDEx2 = Phylum_aldex_marker$Phylum, ANCOMBC = Phylum_ancombc_marker$Phylum)
-Class_intersection <- list(DESeq2 = Class_deseq_marker$Class, ALDEx2 = Class_aldex_marker$Class, ANCOMBC = Class_ancombc_marker$Class)
-Order_intersection <- list(DESeq2 = Order_deseq_marker$Order, ALDEx2 = Order_aldex_marker$Order, ANCOMBC = Order_ancombc_marker$Order)
-Family_intersection <- list(DESeq2 = Family_deseq_marker$Family, ALDEx2 = Family_aldex_marker$Family, ANCOMBC = Family_ancombc_marker$Family)
-Genus_intersection <- list(DESeq2 = Genus_deseq_marker$Genus, ALDEx2 = Genus_aldex_marker$Genus, ANCOMBC = Genus_ancombc_marker$Genus)
+ASV_intersection <- list(Wilcox = sig_wilcox_r$ASV, DESeq2 = deseq_marker$ASV, edgeR = edger_marker$ASV, ALDEx2 = aldex_marker$ASV, ANCOMBC2 = ancombc2_marker$ASV)
+top3_ASV_intersection <- list(DESeq2 = deseq_marker$ASV, ALDEx2 = aldex_marker$ASV, ANCOMBC2 = ancombc2_marker$ASV)
+Phylum_intersection <- list(DESeq2 = Phylum_deseq_marker$Phylum, ALDEx2 = Phylum_aldex_marker$Phylum, ANCOMBC2 = Phylum_ancombc2_marker$Phylum)
+Class_intersection <- list(DESeq2 = Class_deseq_marker$Class, ALDEx2 = Class_aldex_marker$Class, ANCOMBC2 = Class_ancombc2_marker$Class)
+Order_intersection <- list(DESeq2 = Order_deseq_marker$Order, ALDEx2 = Order_aldex_marker$Order, ANCOMBC2 = Order_ancombc2_marker$Order)
+Family_intersection <- list(DESeq2 = Family_deseq_marker$Family, ALDEx2 = Family_aldex_marker$Family, ANCOMBC2 = Family_ancombc2_marker$Family)
+Genus_intersection <- list(DESeq2 = Genus_deseq_marker$Genus, ALDEx2 = Genus_aldex_marker$Genus, ANCOMBC2 = Genus_ancombc2_marker$Genus)
 ```
 
 ```{r plot cols}
@@ -1072,26 +1072,26 @@ root_col <- "#a35c00"
 rhizosphere_col <- "#007355"
 ```
 
-```{r UpsetPlot between different DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=8, fig.cap="**ASV Intersections between different DAA Tools on ASV level.** Upset plots displaying the overlap and uniqueness of significant taxa on ASV level identified by DAA methods (ALDEx2, DESeq2, ANCOMBC, non-parametric Wilcoxon rank-sum test, and edgeR). The horizontal bars show the total number of taxa for each tool, while the vertical bars show the number of shared taxa between corresponding sets, sorted by the total number of shared taxa. All tools use an alpha threshold of 0.05 for significance"}
+```{r UpsetPlot between different DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=8, fig.cap="**ASV Intersections between different DAA Tools on ASV level.** Upset plots displaying the overlap and uniqueness of significant taxa on ASV level identified by DAA methods (ALDEx2, DESeq2, ANCOM-BC2, non-parametric Wilcoxon rank-sum test, and edgeR). The horizontal bars show the total number of taxa for each tool, while the vertical bars show the number of shared taxa between corresponding sets, sorted by the total number of shared taxa. All tools use an alpha threshold of 0.05 for significance"}
 upset(fromList(ASV_intersection), order.by = "freq", point.size=4, sets.bar.color=c(edger_col, wilcox_col, ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "ASVs per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Phylum UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=5, fig.cap="**Phylum Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant phyla identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOMBC). The horizontal bars show the total number of phyla for each tool, while the vertical bars show the number of shared phyla between corresponding sets, sorted by the total number of shared phyla. All tools use an alpha threshold of 0.05 for significance"}
+```{r Phylum UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=5, fig.cap="**Phylum Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant phyla identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of phyla for each tool, while the vertical bars show the number of shared phyla between corresponding sets, sorted by the total number of shared phyla. All tools use an alpha threshold of 0.05 for significance"}
 upset(fromList(Phylum_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Phyla per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Class UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Class Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant classes identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOMBC). The horizontal bars show the total number of classes for each tool, while the vertical bars show the number of shared classes between corresponding sets, sorted by the total number of shared classes. All tools use an alpha threshold of 0.05 for significance"}
+```{r Class UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Class Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant classes identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of classes for each tool, while the vertical bars show the number of shared classes between corresponding sets, sorted by the total number of shared classes. All tools use an alpha threshold of 0.05 for significance"}
 upset(fromList(Class_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Classes per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Order UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Order Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant orders identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOMBC). The horizontal bars show the total number of orders for each tool, while the vertical bars show the number of shared orders between corresponding sets, sorted by the total number of shared orders. All tools use an alpha threshold of 0.05 for significance"}
+```{r Order UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Order Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant orders identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of orders for each tool, while the vertical bars show the number of shared orders between corresponding sets, sorted by the total number of shared orders. All tools use an alpha threshold of 0.05 for significance"}
 upset(fromList(Order_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Orders per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Family UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Family Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant families identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOMBC). The horizontal bars show the total number of families for each tool, while the vertical bars show the number of shared families between corresponding sets, sorted by the total number of shared families. All tools use an alpha threshold of 0.05 for significance"}
+```{r Family UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Family Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant families identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of families for each tool, while the vertical bars show the number of shared families between corresponding sets, sorted by the total number of shared families. All tools use an alpha threshold of 0.05 for significance"}
 upset(fromList(Family_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Families per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Genus UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Genus Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant genera identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOMBC). The horizontal bars show the total number of genera for each tool, while the vertical bars show the number of shared genera between corresponding sets, sorted by the total number of shared genera. All tools use an alpha threshold of 0.05 for significance"}
+```{r Genus UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Genus Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant genera identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of genera for each tool, while the vertical bars show the number of shared genera between corresponding sets, sorted by the total number of shared genera. All tools use an alpha threshold of 0.05 for significance"}
 upset(fromList(Genus_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Genera per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```

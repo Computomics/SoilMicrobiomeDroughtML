@@ -25,7 +25,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 Creating plots displaying **enrichment of taxa** towards **Drought** or
-**Control** conditions for ANCOMBC, ALDEx2, DESeq2 and the SHAP value
+**Control** conditions for ANCOM-BC2, ALDEx2, DESeq2 and the SHAP value
 enrichment results combined with the corresponding **significance** or
 **importance** per taxon for each rank (**phylum** to **genus**).
 
@@ -117,10 +117,10 @@ Genus_SHAP_enrich <- read_and_process_csv("data/SHAP_enriched_genus.csv", all_Ge
 
 ```
 
-The top25 significant taxa of ANCOMBC are selected for plotting. (Top 15 on Phylum rank.)
+The top25 significant taxa of ANCOM-BC2 are selected for plotting. (Top 15 on Phylum rank.)
 
-```{r ANCOMBC top 25}
-ANCOMBC_top25 <- function(data, tool_name, taxon_name) {
+```{r ANCOM-BC2 top 25}
+ANCOMBC2_top25 <- function(data, tool_name, taxon_name) {
   result <- data %>%
     dplyr::filter(tool == tool_name) %>%
     dplyr::rename(Taxon = {{taxon_name}}) %>%
@@ -131,11 +131,11 @@ ANCOMBC_top25 <- function(data, tool_name, taxon_name) {
   return(result)
 }
 
-ANCOMBC_top25_Phylum <- ANCOMBC_top25(Phylum_marker, "ANCOMBC2", "Phylum")
-ANCOMBC_top25_Class <- ANCOMBC_top25(Class_marker, "ANCOMBC2", "Class")
-ANCOMBC_top25_Order <- ANCOMBC_top25(Order_marker, "ANCOMBC2", "Order")
-ANCOMBC_top25_Family <- ANCOMBC_top25(Family_marker, "ANCOMBC2", "Family")
-ANCOMBC_top25_Genus <- ANCOMBC_top25(Genus_marker, "ANCOMBC2", "Genus") %>%
+ANCOMBC2_top25_Phylum <- ANCOMBC2_top25(Phylum_marker, "ANCOMBC2", "Phylum")
+ANCOMBC2_top25_Class <- ANCOMBC2_top25(Class_marker, "ANCOMBC2", "Class")
+ANCOMBC2_top25_Order <- ANCOMBC2_top25(Order_marker, "ANCOMBC2", "Order")
+ANCOMBC2_top25_Family <- ANCOMBC2_top25(Family_marker, "ANCOMBC2", "Family")
+ANCOMBC2_top25_Genus <- ANCOMBC2_top25(Genus_marker, "ANCOMBC2", "Genus") %>%
   mutate(Taxon = ifelse(Taxon == "Burkholderia-Caballeronia-Paraburkholderia", "Burkholderia", Taxon))
 ```
 
@@ -143,51 +143,46 @@ ANCOMBC_top25_Genus <- ANCOMBC_top25(Genus_marker, "ANCOMBC2", "Genus") %>%
 Phylum_data <- Phylum_marker %>% 
   dplyr::rename(Taxon = Phylum) %>% 
   bind_rows(Phylum_SHAP_enrich) %>% 
-  inner_join(ANCOMBC_top25_Phylum, by = "Taxon") %>% 
+  inner_join(ANCOMBC2_top25_Phylum, by = "Taxon") %>% 
   inner_join(Phylum_SHAP, by = "Taxon") %>% 
   arrange(desc(log_padj)) %>% 
-  drop_na(enrich) %>% 
-  mutate(tool = ifelse(tool == "ANCOMBC2", "ANCOMBC", tool))
+  drop_na(enrich)
 
 Class_data <- Class_marker %>% 
   dplyr::rename(Taxon = Class) %>% 
   na.omit() %>% 
   bind_rows(Class_SHAP_enrich) %>% 
-  inner_join(ANCOMBC_top25_Class, by = "Taxon") %>% 
+  inner_join(ANCOMBC2_top25_Class, by = "Taxon") %>% 
   inner_join(Class_SHAP, by = "Taxon") %>% 
   arrange(desc(log_padj)) %>% 
-  drop_na(enrich) %>% 
-  mutate(tool = ifelse(tool == "ANCOMBC2", "ANCOMBC", tool))
+  drop_na(enrich)
 
 Order_data <- Order_marker %>% 
   dplyr::rename(Taxon = Order) %>% 
   na.omit() %>% 
   bind_rows(Order_SHAP_enrich) %>% 
-  inner_join(ANCOMBC_top25_Order, by = "Taxon") %>% 
+  inner_join(ANCOMBC2_top25_Order, by = "Taxon") %>% 
   inner_join(Order_SHAP, by = "Taxon") %>% 
   arrange(desc(log_padj)) %>% 
-  drop_na(enrich) %>% 
-  mutate(tool = ifelse(tool == "ANCOMBC2", "ANCOMBC", tool))
+  drop_na(enrich)
 
 Family_data <- Family_marker %>% 
   dplyr::rename(Taxon = Family) %>% 
   na.omit() %>% 
   bind_rows(Family_SHAP_enrich) %>% 
-  inner_join(ANCOMBC_top25_Family, by = "Taxon") %>% 
+  inner_join(ANCOMBC2_top25_Family, by = "Taxon") %>% 
   inner_join(Family_SHAP, by = "Taxon") %>% 
   arrange(desc(log_padj)) %>% 
-  drop_na(enrich) %>% 
-  mutate(tool = ifelse(tool == "ANCOMBC2", "ANCOMBC", tool))
+  drop_na(enrich)
 
 Genus_data <- Genus_marker %>% 
   dplyr::rename(Taxon = Genus) %>% 
   na.omit() %>% 
   bind_rows(Genus_SHAP_enrich) %>% 
-  inner_join(ANCOMBC_top25_Genus, by = "Taxon") %>% 
+  inner_join(ANCOMBC2_top25_Genus, by = "Taxon") %>% 
   inner_join(Genus_SHAP, by = "Taxon") %>% 
   arrange(desc(log_padj)) %>% 
-  drop_na(enrich) %>% 
-  mutate(tool = ifelse(tool == "ANCOMBC2", "ANCOMBC", tool))
+  drop_na(enrich)
 ```
 
 ## Create Heatmaps + Bar plots for Taxon Enrichment/Significance/Importance
@@ -206,7 +201,7 @@ generate_heatmap_and_barplots <- function(data) {
     select(Taxon, log_padj, mean_shap) %>%
     distinct()
 
-  hm <- ggplot(data = tool_enrich, aes(x = factor(tool, levels = c("ANCOMBC", "ALDEx2", "DESeq2", "SHAP")), y = Taxon, fill = enrich)) +
+  hm <- ggplot(data = tool_enrich, aes(x = factor(tool, levels = c("ANCOMBC2", "ALDEx2", "DESeq2", "SHAP")), y = Taxon, fill = enrich)) +
     geom_tile(height = 0.9, width = 0.9) +
     coord_fixed() +
     theme_minimal(base_size = 10) +
@@ -252,23 +247,23 @@ generate_heatmap_and_barplots <- function(data) {
 
 ```
 
-```{r Phylum hm, fig.cap = "**Phylum Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 15 significant phyla from ANCOMBC between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOMBC, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
+```{r Phylum hm, fig.cap = "**Phylum Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 15 significant phyla from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
 generate_heatmap_and_barplots(Phylum_data)
 ```
 
-```{r Class hm, fig.cap = "**Class Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 25 significant classes from ANCOMBC between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOMBC, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
+```{r Class hm, fig.cap = "**Class Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 25 significant classes from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
 generate_heatmap_and_barplots(Class_data)
 ```
 
 
-```{r Order hm, fig.cap = "**Order Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 25 significant orders from ANCOMBC between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOMBC, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
+```{r Order hm, fig.cap = "**Order Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 25 significant orders from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
 generate_heatmap_and_barplots(Order_data)
 ```
 
-```{r Family hm, fig.cap = "**Family Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 25 significant families from ANCOMBC between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOMBC, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
+```{r Family hm, fig.cap = "**Family Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 25 significant families from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
 generate_heatmap_and_barplots(Family_data)
 ```
 
-```{r Genus hm, fig.cap = "**Genera Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 25 significant genera from ANCOMBC between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOMBC, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
+```{r Genus hm, fig.cap = "**Genera Enrichment, Significance and Importance by DAA Tools and SHAP Values.** Binary heatmap showing the enrichment of the top 25 significant genera from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha <0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing $-log_{10}$(p_adjust) values (orange) and mean(|SHAP values|) (green)."}
 generate_heatmap_and_barplots(Genus_data)
 ```
