@@ -1,53 +1,63 @@
----
-title: "Metagenomics Analysis"
-author: "Michelle Hagen"
-output:
-    github_document:
-    fig_width: 5
-    fig_height: 5
-    dev: jpeg
-    html_document:
-        keep_md: yes
-        toc: yes
-        toc_float:
-          collapse: no
-        fig_caption: yes
-        code_folding: show
-    pdf_document:
-        fig_caption: yes
-        fig_height: 9
-        fig_width: 8
-        number_sections: yes
-        toc: yes
-editor_options: 
-  markdown: 
-    wrap: 72
----
+Metagenomics Analysis
+================
+Michelle Hagen
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+Perform Metagenomics analysis to the *‘drought-stress’ dataset* from
+Naylor et al., 2017:
+
+Naylor, D., DeGraaf, S., Purdom, E., Coleman-Derr, D.: Drought and host
+selection influence bacterial community dynamics in the grass root
+microbiome. The ISME Journal 11(12), 2691–2704 (2017)
+<https://doi.org/10.1038/ismej.2017.118>
+
+The script performs **data processing** steps and a **diversity
+analysis** followed up with a **Differential Abundance Analysis** on ASV
+level and all ranks (phylum to genus level).
+
+``` r
+library(phyloseq); print(paste0("phyloseq, version: ", packageVersion("phyloseq")))
 ```
 
-Perform Metagenomics analysis to the *'drought-stress' dataset* from Naylor et al., 2017:
+    ## [1] "phyloseq, version: 1.44.0"
 
-Naylor, D., DeGraaf, S., Purdom, E., Coleman-Derr, D.: Drought and host selection influence bacterial community dynamics in the grass root microbiome. The ISME Journal 11(12), 2691--2704 (2017) <https://doi.org/10.1038/ismej.2017.118>
-
-The script performs **data processing** steps and a **diversity analysis** followed up with a **Differential Abundance Analysis** on ASV level and all ranks (phylum to genus level).
-
-```{r load packages, message=FALSE, error=FALSE, warning=FALSE}
-library(phyloseq); print(paste0("phyloseq, version: ", packageVersion("phyloseq")))
+``` r
 library(tidyverse); print(paste0("tidyverse, version: ", packageVersion("tidyverse")))
+```
+
+    ## [1] "tidyverse, version: 2.0.0"
+
+``` r
 library(ggpubr); print(paste0("ggpubr, version: ", packageVersion("ggpubr")))
+```
+
+    ## [1] "ggpubr, version: 0.6.0"
+
+``` r
 library(microbiomeMarker); print(paste0("microbiomeMarker, version: ", packageVersion("microbiomeMarker")))
+```
+
+    ## [1] "microbiomeMarker, version: 1.6.0"
+
+``` r
 library(ANCOMBC); print(paste0("ANCOMBC, version: ", packageVersion("ANCOMBC")))
+```
+
+    ## [1] "ANCOMBC, version: 2.2.2"
+
+``` r
 library(UpSetR); print(paste0("UpSetR, version: ", packageVersion("UpSetR")))
 ```
 
+    ## [1] "UpSetR, version: 1.4.0"
+
 **Load in Data:**
 
-The **ASV tables** of the grass-drought dataset obtained from the DADA2 workflow are loaded in as RData objects directly into the workspace (`data/DADA2_ASV_count.RData`, `data/DADA2_ASV_taxonomy.RData`) together with the corresponding **metadata** file `data/metadata.csv`.
+The **ASV tables** of the grass-drought dataset obtained from the DADA2
+workflow are loaded in as RData objects directly into the workspace
+(`data/DADA2_ASV_count.RData`, `data/DADA2_ASV_taxonomy.RData`) together
+with the corresponding **metadata** file `data/metadata.csv`.
 
-```{r load data}
+``` r
 load("data/DADA2_ASV_count.RData")
 load("data/DADA2_ASV_taxonomy.RData")
 metadata <- read.table("data/metadata.csv", sep = ",", header = TRUE) %>% 
@@ -58,9 +68,11 @@ metadata <- read.table("data/metadata.csv", sep = ",", header = TRUE) %>%
 
 ## Filtering
 
-ASVs that are not present in 95% or more of all samples are filtered from the dataset. Samples with low readcounts (here, the 10% decile D1 of the dataset at 17,291 reads) are also discarded.
+ASVs that are not present in 95% or more of all samples are filtered
+from the dataset. Samples with low readcounts (here, the 10% decile D1
+of the dataset at 17,291 reads) are also discarded.
 
-```{r prevalence filtering}
+``` r
 # Filter out ASVs that are not present in 95-100% of all samples and create new ASV_count and ASV_taxonomy tables
 ASV_count_95 <- DADA2_ASV_count[,colSums(DADA2_ASV_count == 0) < (nrow(DADA2_ASV_count) * 0.95)]
 
@@ -68,7 +80,7 @@ t_ASV_taxonomy <- t(DADA2_ASV_taxonomy)
 ASV_taxonomy_95 <- t(t_ASV_taxonomy[,colSums(DADA2_ASV_count == 0) < (nrow(DADA2_ASV_count) * 0.95)])
 ```
 
-```{r phyloseq object}
+``` r
 ps_filtered <- phyloseq(otu_table(ASV_count_95, taxa_are_rows=FALSE),
                sample_data(metadata),
                tax_table(ASV_taxonomy_95))
@@ -76,25 +88,53 @@ ps_filtered <- phyloseq(otu_table(ASV_count_95, taxa_are_rows=FALSE),
 ps_filtered
 ```
 
-```{r remove small samples}
+    ## phyloseq-class experiment-level object
+    ## otu_table()   OTU Table:         [ 3276 taxa and 623 samples ]
+    ## sample_data() Sample Data:       [ 623 samples by 3 sample variables ]
+    ## tax_table()   Taxonomy Table:    [ 3276 taxa by 7 taxonomic ranks ]
+
+``` r
 D1 <- 17291
 
 ps_filtered <- phyloseq::subset_samples(ps_filtered, phyloseq::sample_sums(ps_filtered) > D1)
 (ps_filtered <- phyloseq::prune_taxa(phyloseq::taxa_sums(ps_filtered) > 0, ps_filtered))
 ```
 
+    ## phyloseq-class experiment-level object
+    ## otu_table()   OTU Table:         [ 3276 taxa and 560 samples ]
+    ## sample_data() Sample Data:       [ 560 samples by 3 sample variables ]
+    ## tax_table()   Taxonomy Table:    [ 3276 taxa by 7 taxonomic ranks ]
+
 ## Rarefaction
 
-The dataset is rarefied to the lowest sample size (here the 10 % decile D1).
+The dataset is rarefied to the lowest sample size (here the 10 % decile
+D1).
 
-```{r rarefaction}
+``` r
 ps_rare_filtered <- phyloseq::rarefy_even_depth(ps_filtered, rngseed = 123, replace = FALSE)
+```
+
+    ## `set.seed(123)` was used to initialize repeatable random subsampling.
+
+    ## Please record this for your records so others can reproduce.
+
+    ## Try `set.seed(123); .Random.seed` for the full vector
+
+    ## ...
+
+``` r
 ps_rare_filtered
 ```
 
-Remove 20 % of samples from the dataset to create a hold-out dataset for testing the ML model.
+    ## phyloseq-class experiment-level object
+    ## otu_table()   OTU Table:         [ 3276 taxa and 560 samples ]
+    ## sample_data() Sample Data:       [ 560 samples by 3 sample variables ]
+    ## tax_table()   Taxonomy Table:    [ 3276 taxa by 7 taxonomic ranks ]
 
-```{r}
+Remove 20 % of samples from the dataset to create a hold-out dataset for
+testing the ML model.
+
+``` r
 factor_to_maintain_ratio <- "Watering_Regm"
 sample_data(ps_rare_filtered)$Watering_Regm <- factor(sample_data(ps_rare_filtered)$Watering_Regm)
 
@@ -121,31 +161,47 @@ remaining_sample_names <- setdiff(rownames(sample_data(ps_rare_filtered)), selec
 
 ps_hold_out <- prune_samples(selected_sample_names, ps_rare_filtered)
 ps_rare_filtered <- prune_samples(remaining_sample_names, ps_rare_filtered)
-
 ```
 
 Remaining number of Control and Drought samples in the dataset:
 
-```{r}
+``` r
 table(sample_data(ps_rare_filtered)[["Watering_Regm"]])
 ```
 
+    ## 
+    ## Control Drought 
+    ##     234     214
+
 Remaining number of Control and Drought samples in the hold-out dataset:
 
-```{r}
+``` r
 table(sample_data(ps_hold_out)[["Watering_Regm"]])
 ```
+
+    ## 
+    ## Control Drought 
+    ##      58      54
 
 # Diversity Analysis
 
 ## Relative Abundances of Taxa
 
-The top 10 most abundant taxa at each taxonomic rank (phylum - genus) are displayed as stacked bar charts between the Control and Drought groups to display visible differences in the relative abundances between the two groups.
+The top 10 most abundant taxa at each taxonomic rank (phylum - genus)
+are displayed as stacked bar charts between the Control and Drought
+groups to display visible differences in the relative abundances between
+the two groups.
 
-```{r aggregate top10 taxa}
+``` r
 ps_ra_rare_filtered = phyloseq::transform_sample_counts(ps_rare_filtered, function(x){x / sum(x)})
 
 ps_ra_top10_phy <- microbiomeutilities::aggregate_top_taxa2(ps_ra_rare_filtered, "Phylum", top = 10)
+```
+
+    ## Warning: replacing previous import 'ggplot2::alpha' by 'microbiome::alpha' when
+    ## loading 'microbiomeutilities'
+
+``` r
 ps_ra_top10_cla <- microbiomeutilities::aggregate_top_taxa2(ps_ra_rare_filtered, "Class", top = 10)
 ps_ra_top10_ord <- microbiomeutilities::aggregate_top_taxa2(ps_ra_rare_filtered, "Order", top = 10)
 ps_ra_top10_fam <- microbiomeutilities::aggregate_top_taxa2(ps_ra_rare_filtered, "Family", top = 10)
@@ -153,7 +209,7 @@ ps_ra_top10_gen <- microbiomeutilities::aggregate_top_taxa2(ps_ra_rare_filtered,
 ps_ra_top10_spe <- microbiomeutilities::aggregate_top_taxa2(ps_ra_rare_filtered, "Species", top = 10)
 ```
 
-```{r merge and transform, warning=FALSE}
+``` r
 merge_and_transform <- function(ps_data, group_name) {
   ps_merge <- merge_samples(ps_data, group = group_name)
   sample_data(ps_merge)$Watering_Regm <- sample_names(ps_merge)
@@ -168,12 +224,11 @@ ps_ra_top10_fam_merge <- merge_and_transform(ps_ra_top10_fam, "Watering_Regm")
 ps_ra_top10_gen_merge <- merge_and_transform(ps_ra_top10_gen, "Watering_Regm")
 ```
 
-```{r color palette}
+``` r
 top11_palette <- c("#290AD8", "#264DFF", "#3FA0FF", "#AAF7FF", "#B2FFB2", "#FFFFBF", "#FFE099", "#FFAD72", "#F76D5E", "#D82632", "#A50021")
 ```
 
-```{r top10 rel abundances, fig.height=12, fig.width=8, warning=FALSE, message=FALSE, fig.cap="**Relative Abundances per Rank.** Bar plots displaying the relative abundance of the top 10 taxa between the ’Control’ and ’Drought’ group on Phylum, Class, Order, Family and Genus level in alphabetical order."}
-
+``` r
 # Phylum
 p_ra_top10_Phylum <- plot_bar(ps_ra_top10_phy_merge, fill = "Phylum", x = "Watering_Regm") +
     geom_bar(aes(fill = Phylum),
@@ -245,15 +300,24 @@ p_ra_top10_Genus$data$Genus <- factor(p_ra_top10_Genus$data$Genus, levels = c("B
 
 # Arrange the plots using ggarrange
 egg::ggarrange(p_ra_top10_Phylum, p_ra_top10_Class, p_ra_top10_Order, p_ra_top10_Family, p_ra_top10_Genus, ncol = 2)
-
 ```
+
+<figure>
+<img
+src="Metagenomics_Analysis_files/figure-gfm/top10%20rel%20abundances-1.png"
+alt="Relative Abundances per Rank. Bar plots displaying the relative abundance of the top 10 taxa between the ’Control’ and ’Drought’ group on Phylum, Class, Order, Family and Genus level in alphabetical order." />
+<figcaption aria-hidden="true"><strong>Relative Abundances per
+Rank.</strong> Bar plots displaying the relative abundance of the top 10
+taxa between the ’Control’ and ’Drought’ group on Phylum, Class, Order,
+Family and Genus level in alphabetical order.</figcaption>
+</figure>
 
 ## Alpha Diversity
 
-The variation within samples is displayed using the Shannon index between the two watering regimes.
+The variation within samples is displayed using the Shannon index
+between the two watering regimes.
 
-```{r Alpha Diversity, fig.cap="**Alpha Diversity.** Alpha diversity plot comparing the Control (blue) and ’Drought’ (red) watering regimes. (A) Boxplot of Shannon’s Diversity index for all samples comparing the 'Control' (blue) and ’Drought’ (red) watering regimes. Significance was determined using a non-parametric Wilcoxon rank sum test (* p <0.05, ** p <0.01, *** p <0.001, **** p <0.0001)."}
-
+``` r
 adiv <- data.frame(
   "Shannon" = phyloseq::estimate_richness(ps_rare_filtered, measures = "Shannon"),
   "Watering_Regm" = phyloseq::sample_data(ps_rare_filtered)$Watering_Regm
@@ -278,11 +342,25 @@ adiv_wr <- adiv %>%
 adiv_wr
 ```
 
+<figure>
+<img
+src="Metagenomics_Analysis_files/figure-gfm/Alpha%20Diversity-1.png"
+alt="Alpha Diversity. Alpha diversity plot comparing the Control (blue) and ’Drought’ (red) watering regimes. (A) Boxplot of Shannon’s Diversity index for all samples comparing the ‘Control’ (blue) and ’Drought’ (red) watering regimes. Significance was determined using a non-parametric Wilcoxon rank sum test (* p &lt;0.05, ** p &lt;0.01, *** p &lt;0.001, **** p &lt;0.0001)." />
+<figcaption aria-hidden="true"><strong>Alpha Diversity.</strong> Alpha
+diversity plot comparing the Control (blue) and ’Drought’ (red) watering
+regimes. (A) Boxplot of Shannon’s Diversity index for all samples
+comparing the ‘Control’ (blue) and ’Drought’ (red) watering regimes.
+Significance was determined using a non-parametric Wilcoxon rank sum
+test (* p &lt;0.05, ** p &lt;0.01, *** p &lt;0.001, **** p
+&lt;0.0001).</figcaption>
+</figure>
+
 ## Beta Diversity
 
-The variation between samples is displayed using the Bray-Curtis dissimilarities between the two watering regimes.
+The variation between samples is displayed using the Bray-Curtis
+dissimilarities between the two watering regimes.
 
-```{r Beta diversity, fig.cap="**Beta Diversity.** Principal Coordinate plot using Bray-Curtis dissimilarities colored by the ’Control’ (blue) and ’Drought’ (red) watering regimes."}
+``` r
 pcoa_bc = phyloseq::ordinate(ps_rare_filtered, "PCoA", "bray") 
 
 pcoa_wr <- phyloseq::plot_ordination(ps_rare_filtered, pcoa_bc, color = "Watering_Regm") + 
@@ -297,11 +375,21 @@ pcoa_wr <- phyloseq::plot_ordination(ps_rare_filtered, pcoa_bc, color = "Waterin
 pcoa_wr
 ```
 
+<figure>
+<img src="Metagenomics_Analysis_files/figure-gfm/Beta%20diversity-1.png"
+alt="Beta Diversity. Principal Coordinate plot using Bray-Curtis dissimilarities colored by the ’Control’ (blue) and ’Drought’ (red) watering regimes." />
+<figcaption aria-hidden="true"><strong>Beta Diversity.</strong>
+Principal Coordinate plot using Bray-Curtis dissimilarities colored by
+the ’Control’ (blue) and ’Drought’ (red) watering regimes.</figcaption>
+</figure>
+
 ## Differential Abundance Analysis
 
-DAA was performed to find significant taxa for drought stress. Five popular methods were tested out on ASV level and the three most suitable methods were further used on all ranks (phylum-genus).
+DAA was performed to find significant taxa for drought stress. Five
+popular methods were tested out on ASV level and the three most suitable
+methods were further used on all ranks (phylum-genus).
 
-```{r tax info}
+``` r
 taxa_info <- data.frame(tax_table(ps_rare_filtered)) %>%
   rownames_to_column(var = "ASV")
 ```
@@ -310,7 +398,7 @@ taxa_info <- data.frame(tax_table(ps_rare_filtered)) %>%
 
 ### Wilcoxon rank-sum test
 
-```{r wilcoxon rank-sum test}
+``` r
 ps_rare_filtered_clr <- microbiome::transform(ps_rare_filtered, "clr")
 
 ps_wilcox_r <- data.frame(phyloseq::otu_table(ps_rare_filtered_clr))
@@ -334,7 +422,12 @@ wilcox_results_r <- ps_wilcox_r %>%
 wilcox_results_r <- wilcox_results_r %>%
   dplyr::select(ASV, p_value) %>%
   unnest()
+```
 
+    ## Warning: `cols` is now required when using `unnest()`.
+    ## ℹ Please use `cols = c(p_value)`.
+
+``` r
 sig_wilcox_r <- wilcox_results_r %>%
   full_join(taxa_info) %>%
   arrange(p_value) %>%
@@ -344,9 +437,11 @@ sig_wilcox_r <- wilcox_results_r %>%
   arrange(order(gtools::mixedorder(ASV)))
 ```
 
+    ## Joining with `by = join_by(ASV)`
+
 ### edgeR
 
-```{r}
+``` r
 edger_microbiomeMarker <- run_edger(
   ps_rare_filtered,
   group = "Watering_Regm",
@@ -367,7 +462,7 @@ edger_marker <- marker_table(edger_microbiomeMarker) %>%
 
 ### DESeq2
 
-```{r}
+``` r
 deseq_microbiomeMarker <- run_deseq2(
   ps_rare_filtered,
   group = "Watering_Regm",
@@ -383,7 +478,11 @@ deseq_microbiomeMarker <- run_deseq2(
   p_adjust = "BH",
   pvalue_cutoff = 0.05
 )
+```
 
+    ## converting counts to integer mode
+
+``` r
 deseq_marker <- marker_table(deseq_microbiomeMarker) %>%
   as_tibble() %>% 
   arrange(order(gtools::mixedorder(feature))) %>% 
@@ -393,7 +492,7 @@ deseq_marker <- marker_table(deseq_microbiomeMarker) %>%
 
 ### ALDEx2
 
-```{r}
+``` r
 aldex_microbiomeMarker <- run_aldex(
   ps_rare_filtered,
   group = "Watering_Regm",
@@ -407,7 +506,143 @@ aldex_microbiomeMarker <- run_aldex(
   denom = "iqlr",
   paired = FALSE
 )
+```
 
+    ## operating in serial mode
+
+    ## computing iqlr centering
+
+    ## New names:
+    ## • `` -> `...1`
+    ## • `` -> `...2`
+    ## • `` -> `...3`
+    ## • `` -> `...4`
+    ## • `` -> `...5`
+    ## • `` -> `...6`
+    ## • `` -> `...7`
+    ## • `` -> `...8`
+    ## • `` -> `...9`
+    ## • `` -> `...10`
+    ## • `` -> `...11`
+    ## • `` -> `...12`
+    ## • `` -> `...13`
+    ## • `` -> `...14`
+    ## • `` -> `...15`
+    ## • `` -> `...16`
+    ## • `` -> `...17`
+    ## • `` -> `...18`
+    ## • `` -> `...19`
+    ## • `` -> `...20`
+    ## • `` -> `...21`
+    ## • `` -> `...22`
+    ## • `` -> `...23`
+    ## • `` -> `...24`
+    ## • `` -> `...25`
+    ## • `` -> `...26`
+    ## • `` -> `...27`
+    ## • `` -> `...28`
+    ## • `` -> `...29`
+    ## • `` -> `...30`
+    ## • `` -> `...31`
+    ## • `` -> `...32`
+    ## • `` -> `...33`
+    ## • `` -> `...34`
+    ## • `` -> `...35`
+    ## • `` -> `...36`
+    ## • `` -> `...37`
+    ## • `` -> `...38`
+    ## • `` -> `...39`
+    ## • `` -> `...40`
+    ## • `` -> `...41`
+    ## • `` -> `...42`
+    ## • `` -> `...43`
+    ## • `` -> `...44`
+    ## • `` -> `...45`
+    ## • `` -> `...46`
+    ## • `` -> `...47`
+    ## • `` -> `...48`
+    ## • `` -> `...49`
+    ## • `` -> `...50`
+    ## • `` -> `...51`
+    ## • `` -> `...52`
+    ## • `` -> `...53`
+    ## • `` -> `...54`
+    ## • `` -> `...55`
+    ## • `` -> `...56`
+    ## • `` -> `...57`
+    ## • `` -> `...58`
+    ## • `` -> `...59`
+    ## • `` -> `...60`
+    ## • `` -> `...61`
+    ## • `` -> `...62`
+    ## • `` -> `...63`
+    ## • `` -> `...64`
+    ## • `` -> `...65`
+    ## • `` -> `...66`
+    ## • `` -> `...67`
+    ## • `` -> `...68`
+    ## • `` -> `...69`
+    ## • `` -> `...70`
+    ## • `` -> `...71`
+    ## • `` -> `...72`
+    ## • `` -> `...73`
+    ## • `` -> `...74`
+    ## • `` -> `...75`
+    ## • `` -> `...76`
+    ## • `` -> `...77`
+    ## • `` -> `...78`
+    ## • `` -> `...79`
+    ## • `` -> `...80`
+    ## • `` -> `...81`
+    ## • `` -> `...82`
+    ## • `` -> `...83`
+    ## • `` -> `...84`
+    ## • `` -> `...85`
+    ## • `` -> `...86`
+    ## • `` -> `...87`
+    ## • `` -> `...88`
+    ## • `` -> `...89`
+    ## • `` -> `...90`
+    ## • `` -> `...91`
+    ## • `` -> `...92`
+    ## • `` -> `...93`
+    ## • `` -> `...94`
+    ## • `` -> `...95`
+    ## • `` -> `...96`
+    ## • `` -> `...97`
+    ## • `` -> `...98`
+    ## • `` -> `...99`
+    ## • `` -> `...100`
+    ## • `` -> `...101`
+    ## • `` -> `...102`
+    ## • `` -> `...103`
+    ## • `` -> `...104`
+    ## • `` -> `...105`
+    ## • `` -> `...106`
+    ## • `` -> `...107`
+    ## • `` -> `...108`
+    ## • `` -> `...109`
+    ## • `` -> `...110`
+    ## • `` -> `...111`
+    ## • `` -> `...112`
+    ## • `` -> `...113`
+    ## • `` -> `...114`
+    ## • `` -> `...115`
+    ## • `` -> `...116`
+    ## • `` -> `...117`
+    ## • `` -> `...118`
+    ## • `` -> `...119`
+    ## • `` -> `...120`
+    ## • `` -> `...121`
+    ## • `` -> `...122`
+    ## • `` -> `...123`
+    ## • `` -> `...124`
+    ## • `` -> `...125`
+    ## • `` -> `...126`
+    ## • `` -> `...127`
+    ## • `` -> `...128`
+
+``` r
 aldex_marker <- marker_table(aldex_microbiomeMarker) %>%
   as_tibble() %>% 
   arrange(order(gtools::mixedorder(feature))) %>% 
@@ -420,11 +655,27 @@ aldex_marker <- marker_table(aldex_microbiomeMarker) %>%
 
 ### ANCOM-BC2
 
-```{r}
+``` r
 ancom_da <- ancombc2(data = ps_rare_filtered, tax_level = NULL, fix_formula = "Watering_Regm",
               p_adj_method = "BH", lib_cut = 0, group = "Watering_Regm", struc_zero = FALSE,
               neg_lb = FALSE, alpha = 0.05, global = FALSE)
+```
 
+    ## Warning: The group variable has < 3 categories 
+    ## The multi-group comparisons (global/pairwise/dunnet/trend) will be deactivated
+
+    ## Loading required package: foreach
+
+    ## 
+    ## Attaching package: 'foreach'
+
+    ## The following objects are masked from 'package:purrr':
+    ## 
+    ##     accumulate, when
+
+    ## Loading required package: rngtools
+
+``` r
 ancom_res <- data.frame(
   ASV = unlist(ancom_da$res$taxon),
   lfc = unlist(ancom_da$res$lfc_Watering_RegmDrought),
@@ -449,11 +700,15 @@ ancombc2_marker <- ancom_res %>%
   left_join(taxa_info, by = "ASV")
 ```
 
+    ## Joining with `by = join_by(ASV)`
+
 ## DAA on all ranks
 
-ANCOM-BC2, ALDEx2 and DESeq2 are selected as the top 3 best performing tools for this dataset and therefore used on all taxonomic ranks (phylum-genus).
+ANCOM-BC2, ALDEx2 and DESeq2 are selected as the top 3 best performing
+tools for this dataset and therefore used on all taxonomic ranks
+(phylum-genus).
 
-```{r select taxa on ranks}
+``` r
 Phylum_tax <- DADA2_ASV_taxonomy %>% 
   as_tibble() %>% 
   dplyr::select(Phylum) %>% 
@@ -483,13 +738,11 @@ Genus_tax <- DADA2_ASV_taxonomy %>%
   dplyr::select(Genus) %>%
   na.omit() %>% 
   distinct()
-  
 ```
 
 ### Phylum level DAA
 
-```{r Phylum DAA}
-
+``` r
 # DESeq2
 Phylum_deseq_microbiomeMarker <- run_deseq2(
   ps_rare_filtered,
@@ -506,7 +759,11 @@ Phylum_deseq_microbiomeMarker <- run_deseq2(
   p_adjust = "BH",
   pvalue_cutoff = 0.05
 )
+```
 
+    ## converting counts to integer mode
+
+``` r
 Phylum_deseq_marker <- marker_table(Phylum_deseq_microbiomeMarker) %>%
   as_tibble() %>% 
   dplyr::filter(feature != "p__") %>% 
@@ -532,7 +789,143 @@ Phylum_aldex_microbiomeMarker <- run_aldex(
   denom = "iqlr",
   paired = FALSE
 )
+```
 
+    ## operating in serial mode
+
+    ## computing iqlr centering
+
+    ## New names:
+    ## • `` -> `...1`
+    ## • `` -> `...2`
+    ## • `` -> `...3`
+    ## • `` -> `...4`
+    ## • `` -> `...5`
+    ## • `` -> `...6`
+    ## • `` -> `...7`
+    ## • `` -> `...8`
+    ## • `` -> `...9`
+    ## • `` -> `...10`
+    ## • `` -> `...11`
+    ## • `` -> `...12`
+    ## • `` -> `...13`
+    ## • `` -> `...14`
+    ## • `` -> `...15`
+    ## • `` -> `...16`
+    ## • `` -> `...17`
+    ## • `` -> `...18`
+    ## • `` -> `...19`
+    ## • `` -> `...20`
+    ## • `` -> `...21`
+    ## • `` -> `...22`
+    ## • `` -> `...23`
+    ## • `` -> `...24`
+    ## • `` -> `...25`
+    ## • `` -> `...26`
+    ## • `` -> `...27`
+    ## • `` -> `...28`
+    ## • `` -> `...29`
+    ## • `` -> `...30`
+    ## • `` -> `...31`
+    ## • `` -> `...32`
+    ## • `` -> `...33`
+    ## • `` -> `...34`
+    ## • `` -> `...35`
+    ## • `` -> `...36`
+    ## • `` -> `...37`
+    ## • `` -> `...38`
+    ## • `` -> `...39`
+    ## • `` -> `...40`
+    ## • `` -> `...41`
+    ## • `` -> `...42`
+    ## • `` -> `...43`
+    ## • `` -> `...44`
+    ## • `` -> `...45`
+    ## • `` -> `...46`
+    ## • `` -> `...47`
+    ## • `` -> `...48`
+    ## • `` -> `...49`
+    ## • `` -> `...50`
+    ## • `` -> `...51`
+    ## • `` -> `...52`
+    ## • `` -> `...53`
+    ## • `` -> `...54`
+    ## • `` -> `...55`
+    ## • `` -> `...56`
+    ## • `` -> `...57`
+    ## • `` -> `...58`
+    ## • `` -> `...59`
+    ## • `` -> `...60`
+    ## • `` -> `...61`
+    ## • `` -> `...62`
+    ## • `` -> `...63`
+    ## • `` -> `...64`
+    ## • `` -> `...65`
+    ## • `` -> `...66`
+    ## • `` -> `...67`
+    ## • `` -> `...68`
+    ## • `` -> `...69`
+    ## • `` -> `...70`
+    ## • `` -> `...71`
+    ## • `` -> `...72`
+    ## • `` -> `...73`
+    ## • `` -> `...74`
+    ## • `` -> `...75`
+    ## • `` -> `...76`
+    ## • `` -> `...77`
+    ## • `` -> `...78`
+    ## • `` -> `...79`
+    ## • `` -> `...80`
+    ## • `` -> `...81`
+    ## • `` -> `...82`
+    ## • `` -> `...83`
+    ## • `` -> `...84`
+    ## • `` -> `...85`
+    ## • `` -> `...86`
+    ## • `` -> `...87`
+    ## • `` -> `...88`
+    ## • `` -> `...89`
+    ## • `` -> `...90`
+    ## • `` -> `...91`
+    ## • `` -> `...92`
+    ## • `` -> `...93`
+    ## • `` -> `...94`
+    ## • `` -> `...95`
+    ## • `` -> `...96`
+    ## • `` -> `...97`
+    ## • `` -> `...98`
+    ## • `` -> `...99`
+    ## • `` -> `...100`
+    ## • `` -> `...101`
+    ## • `` -> `...102`
+    ## • `` -> `...103`
+    ## • `` -> `...104`
+    ## • `` -> `...105`
+    ## • `` -> `...106`
+    ## • `` -> `...107`
+    ## • `` -> `...108`
+    ## • `` -> `...109`
+    ## • `` -> `...110`
+    ## • `` -> `...111`
+    ## • `` -> `...112`
+    ## • `` -> `...113`
+    ## • `` -> `...114`
+    ## • `` -> `...115`
+    ## • `` -> `...116`
+    ## • `` -> `...117`
+    ## • `` -> `...118`
+    ## • `` -> `...119`
+    ## • `` -> `...120`
+    ## • `` -> `...121`
+    ## • `` -> `...122`
+    ## • `` -> `...123`
+    ## • `` -> `...124`
+    ## • `` -> `...125`
+    ## • `` -> `...126`
+    ## • `` -> `...127`
+    ## • `` -> `...128`
+
+``` r
 #ALDEx2
 Phylum_aldex_marker <- marker_table(Phylum_aldex_microbiomeMarker) %>%
   as_tibble() %>% 
@@ -560,7 +953,12 @@ Phylum_ancom_da <- ancombc2(
   neg_lb = FALSE,
   alpha = 0.05,
   global = FALSE)
+```
 
+    ## Warning: The group variable has < 3 categories 
+    ## The multi-group comparisons (global/pairwise/dunnet/trend) will be deactivated
+
+``` r
 Phylum_ancom_res <- data.frame(
   ASV = unlist(Phylum_ancom_da$res$taxon),
   lfc = unlist(Phylum_ancom_da$res$lfc_Watering_RegmDrought),  # log fold changes
@@ -593,10 +991,21 @@ Phylum_ancombc2_marker <- Phylum_sig_ancombc2 %>%
   mutate(tool="ANCOMBC2")
 ```
 
+    ## Warning: There was 1 warning in `mutate()`.
+    ## ℹ In argument: `across("ASV", str_replace, "Phylum:", "")`.
+    ## Caused by warning:
+    ## ! The `...` argument of `across()` is deprecated as of dplyr 1.1.0.
+    ## Supply arguments directly to `.fns` through an anonymous function instead.
+    ## 
+    ##   # Previously
+    ##   across(a:b, mean, na.rm = TRUE)
+    ## 
+    ##   # Now
+    ##   across(a:b, \(x) mean(x, na.rm = TRUE))
+
 ### Class level DAA
 
-```{r Class DAA}
-
+``` r
 # DESeq2
 Class_deseq_microbiomeMarker <- run_deseq2(
   ps_rare_filtered,
@@ -613,7 +1022,11 @@ Class_deseq_microbiomeMarker <- run_deseq2(
   p_adjust = "BH",
   pvalue_cutoff = 0.05
 )
+```
 
+    ## converting counts to integer mode
+
+``` r
 Class_deseq_marker <- marker_table(Class_deseq_microbiomeMarker) %>%
   as_tibble() %>% 
   arrange(order(gtools::mixedorder(enrich_group))) %>% 
@@ -642,7 +1055,143 @@ Class_aldex_microbiomeMarker <- run_aldex(
   denom = "iqlr",
   paired = FALSE
 )
+```
 
+    ## operating in serial mode
+
+    ## computing iqlr centering
+
+    ## New names:
+    ## • `` -> `...1`
+    ## • `` -> `...2`
+    ## • `` -> `...3`
+    ## • `` -> `...4`
+    ## • `` -> `...5`
+    ## • `` -> `...6`
+    ## • `` -> `...7`
+    ## • `` -> `...8`
+    ## • `` -> `...9`
+    ## • `` -> `...10`
+    ## • `` -> `...11`
+    ## • `` -> `...12`
+    ## • `` -> `...13`
+    ## • `` -> `...14`
+    ## • `` -> `...15`
+    ## • `` -> `...16`
+    ## • `` -> `...17`
+    ## • `` -> `...18`
+    ## • `` -> `...19`
+    ## • `` -> `...20`
+    ## • `` -> `...21`
+    ## • `` -> `...22`
+    ## • `` -> `...23`
+    ## • `` -> `...24`
+    ## • `` -> `...25`
+    ## • `` -> `...26`
+    ## • `` -> `...27`
+    ## • `` -> `...28`
+    ## • `` -> `...29`
+    ## • `` -> `...30`
+    ## • `` -> `...31`
+    ## • `` -> `...32`
+    ## • `` -> `...33`
+    ## • `` -> `...34`
+    ## • `` -> `...35`
+    ## • `` -> `...36`
+    ## • `` -> `...37`
+    ## • `` -> `...38`
+    ## • `` -> `...39`
+    ## • `` -> `...40`
+    ## • `` -> `...41`
+    ## • `` -> `...42`
+    ## • `` -> `...43`
+    ## • `` -> `...44`
+    ## • `` -> `...45`
+    ## • `` -> `...46`
+    ## • `` -> `...47`
+    ## • `` -> `...48`
+    ## • `` -> `...49`
+    ## • `` -> `...50`
+    ## • `` -> `...51`
+    ## • `` -> `...52`
+    ## • `` -> `...53`
+    ## • `` -> `...54`
+    ## • `` -> `...55`
+    ## • `` -> `...56`
+    ## • `` -> `...57`
+    ## • `` -> `...58`
+    ## • `` -> `...59`
+    ## • `` -> `...60`
+    ## • `` -> `...61`
+    ## • `` -> `...62`
+    ## • `` -> `...63`
+    ## • `` -> `...64`
+    ## • `` -> `...65`
+    ## • `` -> `...66`
+    ## • `` -> `...67`
+    ## • `` -> `...68`
+    ## • `` -> `...69`
+    ## • `` -> `...70`
+    ## • `` -> `...71`
+    ## • `` -> `...72`
+    ## • `` -> `...73`
+    ## • `` -> `...74`
+    ## • `` -> `...75`
+    ## • `` -> `...76`
+    ## • `` -> `...77`
+    ## • `` -> `...78`
+    ## • `` -> `...79`
+    ## • `` -> `...80`
+    ## • `` -> `...81`
+    ## • `` -> `...82`
+    ## • `` -> `...83`
+    ## • `` -> `...84`
+    ## • `` -> `...85`
+    ## • `` -> `...86`
+    ## • `` -> `...87`
+    ## • `` -> `...88`
+    ## • `` -> `...89`
+    ## • `` -> `...90`
+    ## • `` -> `...91`
+    ## • `` -> `...92`
+    ## • `` -> `...93`
+    ## • `` -> `...94`
+    ## • `` -> `...95`
+    ## • `` -> `...96`
+    ## • `` -> `...97`
+    ## • `` -> `...98`
+    ## • `` -> `...99`
+    ## • `` -> `...100`
+    ## • `` -> `...101`
+    ## • `` -> `...102`
+    ## • `` -> `...103`
+    ## • `` -> `...104`
+    ## • `` -> `...105`
+    ## • `` -> `...106`
+    ## • `` -> `...107`
+    ## • `` -> `...108`
+    ## • `` -> `...109`
+    ## • `` -> `...110`
+    ## • `` -> `...111`
+    ## • `` -> `...112`
+    ## • `` -> `...113`
+    ## • `` -> `...114`
+    ## • `` -> `...115`
+    ## • `` -> `...116`
+    ## • `` -> `...117`
+    ## • `` -> `...118`
+    ## • `` -> `...119`
+    ## • `` -> `...120`
+    ## • `` -> `...121`
+    ## • `` -> `...122`
+    ## • `` -> `...123`
+    ## • `` -> `...124`
+    ## • `` -> `...125`
+    ## • `` -> `...126`
+    ## • `` -> `...127`
+    ## • `` -> `...128`
+
+``` r
 Class_aldex_marker <- marker_table(Class_aldex_microbiomeMarker) %>%
   as_tibble() %>% 
   arrange(order(gtools::mixedorder(enrich_group))) %>% 
@@ -670,7 +1219,12 @@ Class_ancom_da <- ancombc2(
   neg_lb = FALSE,
   alpha = 0.05,
   global = FALSE)
+```
 
+    ## Warning: The group variable has < 3 categories 
+    ## The multi-group comparisons (global/pairwise/dunnet/trend) will be deactivated
+
+``` r
 Class_ancom_res <- data.frame(
   ASV = unlist(Class_ancom_da$res$taxon),
   lfc = unlist(Class_ancom_da$res$lfc_Watering_RegmDrought),  # log fold changes
@@ -706,8 +1260,7 @@ Class_ancombc2_marker <- Class_sig_ancombc2 %>%
 
 ### Order level DAA
 
-```{r Order DAA}
-
+``` r
 #DESeq2
 Order_deseq_microbiomeMarker <- run_deseq2(
   ps_rare_filtered,
@@ -724,7 +1277,11 @@ Order_deseq_microbiomeMarker <- run_deseq2(
   p_adjust = "BH",
   pvalue_cutoff = 0.05
 )
+```
 
+    ## converting counts to integer mode
+
+``` r
 Order_deseq_marker <- marker_table(Order_deseq_microbiomeMarker) %>%
   as_tibble() %>% 
   mutate(across('feature', str_replace, '_c___o__|_o__', '')) %>% 
@@ -753,7 +1310,143 @@ Order_aldex_microbiomeMarker <- run_aldex(
   denom = "iqlr",
   paired = FALSE
 )
+```
 
+    ## operating in serial mode
+
+    ## computing iqlr centering
+
+    ## New names:
+    ## • `` -> `...1`
+    ## • `` -> `...2`
+    ## • `` -> `...3`
+    ## • `` -> `...4`
+    ## • `` -> `...5`
+    ## • `` -> `...6`
+    ## • `` -> `...7`
+    ## • `` -> `...8`
+    ## • `` -> `...9`
+    ## • `` -> `...10`
+    ## • `` -> `...11`
+    ## • `` -> `...12`
+    ## • `` -> `...13`
+    ## • `` -> `...14`
+    ## • `` -> `...15`
+    ## • `` -> `...16`
+    ## • `` -> `...17`
+    ## • `` -> `...18`
+    ## • `` -> `...19`
+    ## • `` -> `...20`
+    ## • `` -> `...21`
+    ## • `` -> `...22`
+    ## • `` -> `...23`
+    ## • `` -> `...24`
+    ## • `` -> `...25`
+    ## • `` -> `...26`
+    ## • `` -> `...27`
+    ## • `` -> `...28`
+    ## • `` -> `...29`
+    ## • `` -> `...30`
+    ## • `` -> `...31`
+    ## • `` -> `...32`
+    ## • `` -> `...33`
+    ## • `` -> `...34`
+    ## • `` -> `...35`
+    ## • `` -> `...36`
+    ## • `` -> `...37`
+    ## • `` -> `...38`
+    ## • `` -> `...39`
+    ## • `` -> `...40`
+    ## • `` -> `...41`
+    ## • `` -> `...42`
+    ## • `` -> `...43`
+    ## • `` -> `...44`
+    ## • `` -> `...45`
+    ## • `` -> `...46`
+    ## • `` -> `...47`
+    ## • `` -> `...48`
+    ## • `` -> `...49`
+    ## • `` -> `...50`
+    ## • `` -> `...51`
+    ## • `` -> `...52`
+    ## • `` -> `...53`
+    ## • `` -> `...54`
+    ## • `` -> `...55`
+    ## • `` -> `...56`
+    ## • `` -> `...57`
+    ## • `` -> `...58`
+    ## • `` -> `...59`
+    ## • `` -> `...60`
+    ## • `` -> `...61`
+    ## • `` -> `...62`
+    ## • `` -> `...63`
+    ## • `` -> `...64`
+    ## • `` -> `...65`
+    ## • `` -> `...66`
+    ## • `` -> `...67`
+    ## • `` -> `...68`
+    ## • `` -> `...69`
+    ## • `` -> `...70`
+    ## • `` -> `...71`
+    ## • `` -> `...72`
+    ## • `` -> `...73`
+    ## • `` -> `...74`
+    ## • `` -> `...75`
+    ## • `` -> `...76`
+    ## • `` -> `...77`
+    ## • `` -> `...78`
+    ## • `` -> `...79`
+    ## • `` -> `...80`
+    ## • `` -> `...81`
+    ## • `` -> `...82`
+    ## • `` -> `...83`
+    ## • `` -> `...84`
+    ## • `` -> `...85`
+    ## • `` -> `...86`
+    ## • `` -> `...87`
+    ## • `` -> `...88`
+    ## • `` -> `...89`
+    ## • `` -> `...90`
+    ## • `` -> `...91`
+    ## • `` -> `...92`
+    ## • `` -> `...93`
+    ## • `` -> `...94`
+    ## • `` -> `...95`
+    ## • `` -> `...96`
+    ## • `` -> `...97`
+    ## • `` -> `...98`
+    ## • `` -> `...99`
+    ## • `` -> `...100`
+    ## • `` -> `...101`
+    ## • `` -> `...102`
+    ## • `` -> `...103`
+    ## • `` -> `...104`
+    ## • `` -> `...105`
+    ## • `` -> `...106`
+    ## • `` -> `...107`
+    ## • `` -> `...108`
+    ## • `` -> `...109`
+    ## • `` -> `...110`
+    ## • `` -> `...111`
+    ## • `` -> `...112`
+    ## • `` -> `...113`
+    ## • `` -> `...114`
+    ## • `` -> `...115`
+    ## • `` -> `...116`
+    ## • `` -> `...117`
+    ## • `` -> `...118`
+    ## • `` -> `...119`
+    ## • `` -> `...120`
+    ## • `` -> `...121`
+    ## • `` -> `...122`
+    ## • `` -> `...123`
+    ## • `` -> `...124`
+    ## • `` -> `...125`
+    ## • `` -> `...126`
+    ## • `` -> `...127`
+    ## • `` -> `...128`
+
+``` r
 Order_aldex_marker <- marker_table(Order_aldex_microbiomeMarker) %>%
   as_tibble() %>% 
   arrange(order(gtools::mixedorder(enrich_group))) %>% 
@@ -780,7 +1473,12 @@ Order_ancom_da <- ancombc2(
   neg_lb = FALSE,
   alpha = 0.05,
   global = FALSE)
+```
 
+    ## Warning: The group variable has < 3 categories 
+    ## The multi-group comparisons (global/pairwise/dunnet/trend) will be deactivated
+
+``` r
 Order_ancom_res <- data.frame(
   ASV = unlist(Order_ancom_da$res$taxon),
   lfc = unlist(Order_ancom_da$res$lfc_Watering_RegmDrought),  # log fold changes
@@ -817,8 +1515,7 @@ Order_ancombc2_marker <- Order_sig_ancombc2 %>%
 
 ### Family level DAA
 
-```{r Family DAA}
-
+``` r
 #DESeq2
 Family_deseq_microbiomeMarker <- run_deseq2(
   ps_rare_filtered,
@@ -835,7 +1532,11 @@ Family_deseq_microbiomeMarker <- run_deseq2(
   p_adjust = "BH",
   pvalue_cutoff = 0.05
 )
+```
 
+    ## converting counts to integer mode
+
+``` r
 Family_deseq_marker <- marker_table(Family_deseq_microbiomeMarker) %>%
   as_tibble() %>% 
   mutate(across('feature', str_replace, '_c___o___f__|_o___f__|_f__', '')) %>% 
@@ -865,7 +1566,143 @@ Family_aldex_microbiomeMarker <- run_aldex(
   denom = "iqlr",
   paired = FALSE
 )
+```
 
+    ## operating in serial mode
+
+    ## computing iqlr centering
+
+    ## New names:
+    ## • `` -> `...1`
+    ## • `` -> `...2`
+    ## • `` -> `...3`
+    ## • `` -> `...4`
+    ## • `` -> `...5`
+    ## • `` -> `...6`
+    ## • `` -> `...7`
+    ## • `` -> `...8`
+    ## • `` -> `...9`
+    ## • `` -> `...10`
+    ## • `` -> `...11`
+    ## • `` -> `...12`
+    ## • `` -> `...13`
+    ## • `` -> `...14`
+    ## • `` -> `...15`
+    ## • `` -> `...16`
+    ## • `` -> `...17`
+    ## • `` -> `...18`
+    ## • `` -> `...19`
+    ## • `` -> `...20`
+    ## • `` -> `...21`
+    ## • `` -> `...22`
+    ## • `` -> `...23`
+    ## • `` -> `...24`
+    ## • `` -> `...25`
+    ## • `` -> `...26`
+    ## • `` -> `...27`
+    ## • `` -> `...28`
+    ## • `` -> `...29`
+    ## • `` -> `...30`
+    ## • `` -> `...31`
+    ## • `` -> `...32`
+    ## • `` -> `...33`
+    ## • `` -> `...34`
+    ## • `` -> `...35`
+    ## • `` -> `...36`
+    ## • `` -> `...37`
+    ## • `` -> `...38`
+    ## • `` -> `...39`
+    ## • `` -> `...40`
+    ## • `` -> `...41`
+    ## • `` -> `...42`
+    ## • `` -> `...43`
+    ## • `` -> `...44`
+    ## • `` -> `...45`
+    ## • `` -> `...46`
+    ## • `` -> `...47`
+    ## • `` -> `...48`
+    ## • `` -> `...49`
+    ## • `` -> `...50`
+    ## • `` -> `...51`
+    ## • `` -> `...52`
+    ## • `` -> `...53`
+    ## • `` -> `...54`
+    ## • `` -> `...55`
+    ## • `` -> `...56`
+    ## • `` -> `...57`
+    ## • `` -> `...58`
+    ## • `` -> `...59`
+    ## • `` -> `...60`
+    ## • `` -> `...61`
+    ## • `` -> `...62`
+    ## • `` -> `...63`
+    ## • `` -> `...64`
+    ## • `` -> `...65`
+    ## • `` -> `...66`
+    ## • `` -> `...67`
+    ## • `` -> `...68`
+    ## • `` -> `...69`
+    ## • `` -> `...70`
+    ## • `` -> `...71`
+    ## • `` -> `...72`
+    ## • `` -> `...73`
+    ## • `` -> `...74`
+    ## • `` -> `...75`
+    ## • `` -> `...76`
+    ## • `` -> `...77`
+    ## • `` -> `...78`
+    ## • `` -> `...79`
+    ## • `` -> `...80`
+    ## • `` -> `...81`
+    ## • `` -> `...82`
+    ## • `` -> `...83`
+    ## • `` -> `...84`
+    ## • `` -> `...85`
+    ## • `` -> `...86`
+    ## • `` -> `...87`
+    ## • `` -> `...88`
+    ## • `` -> `...89`
+    ## • `` -> `...90`
+    ## • `` -> `...91`
+    ## • `` -> `...92`
+    ## • `` -> `...93`
+    ## • `` -> `...94`
+    ## • `` -> `...95`
+    ## • `` -> `...96`
+    ## • `` -> `...97`
+    ## • `` -> `...98`
+    ## • `` -> `...99`
+    ## • `` -> `...100`
+    ## • `` -> `...101`
+    ## • `` -> `...102`
+    ## • `` -> `...103`
+    ## • `` -> `...104`
+    ## • `` -> `...105`
+    ## • `` -> `...106`
+    ## • `` -> `...107`
+    ## • `` -> `...108`
+    ## • `` -> `...109`
+    ## • `` -> `...110`
+    ## • `` -> `...111`
+    ## • `` -> `...112`
+    ## • `` -> `...113`
+    ## • `` -> `...114`
+    ## • `` -> `...115`
+    ## • `` -> `...116`
+    ## • `` -> `...117`
+    ## • `` -> `...118`
+    ## • `` -> `...119`
+    ## • `` -> `...120`
+    ## • `` -> `...121`
+    ## • `` -> `...122`
+    ## • `` -> `...123`
+    ## • `` -> `...124`
+    ## • `` -> `...125`
+    ## • `` -> `...126`
+    ## • `` -> `...127`
+    ## • `` -> `...128`
+
+``` r
 Family_aldex_marker <- marker_table(Family_aldex_microbiomeMarker) %>%
   as_tibble() %>% 
   arrange(order(gtools::mixedorder(enrich_group))) %>% 
@@ -892,7 +1729,12 @@ Family_ancom_da <- ancombc2(
   neg_lb = FALSE,
   alpha = 0.05,
   global = FALSE)
+```
 
+    ## Warning: The group variable has < 3 categories 
+    ## The multi-group comparisons (global/pairwise/dunnet/trend) will be deactivated
+
+``` r
 Family_ancom_res <- data.frame(
   ASV = unlist(Family_ancom_da$res$taxon),
   lfc = unlist(Family_ancom_da$res$lfc_Watering_RegmDrought),  # log fold changes
@@ -930,8 +1772,7 @@ Family_ancombc2_marker <- Family_sig_ancombc2 %>%
 
 ### Genus level DAA
 
-```{r Genus DAA}
-
+``` r
 #DESeq2
 Genus_deseq_microbiomeMarker <- run_deseq2(
   ps_rare_filtered,
@@ -948,7 +1789,11 @@ Genus_deseq_microbiomeMarker <- run_deseq2(
   p_adjust = "BH",
   pvalue_cutoff = 0.05
 )
+```
 
+    ## converting counts to integer mode
+
+``` r
 Genus_deseq_marker <- marker_table(Genus_deseq_microbiomeMarker) %>%
   as_tibble() %>% 
   mutate(across('feature', str_replace, '_o___f___g__|_g__|_f___g__|_c__', '')) %>%
@@ -980,7 +1825,143 @@ Genus_aldex_microbiomeMarker <- run_aldex(
   denom = "iqlr",
   paired = FALSE
 )
+```
 
+    ## operating in serial mode
+
+    ## computing iqlr centering
+
+    ## New names:
+    ## • `` -> `...1`
+    ## • `` -> `...2`
+    ## • `` -> `...3`
+    ## • `` -> `...4`
+    ## • `` -> `...5`
+    ## • `` -> `...6`
+    ## • `` -> `...7`
+    ## • `` -> `...8`
+    ## • `` -> `...9`
+    ## • `` -> `...10`
+    ## • `` -> `...11`
+    ## • `` -> `...12`
+    ## • `` -> `...13`
+    ## • `` -> `...14`
+    ## • `` -> `...15`
+    ## • `` -> `...16`
+    ## • `` -> `...17`
+    ## • `` -> `...18`
+    ## • `` -> `...19`
+    ## • `` -> `...20`
+    ## • `` -> `...21`
+    ## • `` -> `...22`
+    ## • `` -> `...23`
+    ## • `` -> `...24`
+    ## • `` -> `...25`
+    ## • `` -> `...26`
+    ## • `` -> `...27`
+    ## • `` -> `...28`
+    ## • `` -> `...29`
+    ## • `` -> `...30`
+    ## • `` -> `...31`
+    ## • `` -> `...32`
+    ## • `` -> `...33`
+    ## • `` -> `...34`
+    ## • `` -> `...35`
+    ## • `` -> `...36`
+    ## • `` -> `...37`
+    ## • `` -> `...38`
+    ## • `` -> `...39`
+    ## • `` -> `...40`
+    ## • `` -> `...41`
+    ## • `` -> `...42`
+    ## • `` -> `...43`
+    ## • `` -> `...44`
+    ## • `` -> `...45`
+    ## • `` -> `...46`
+    ## • `` -> `...47`
+    ## • `` -> `...48`
+    ## • `` -> `...49`
+    ## • `` -> `...50`
+    ## • `` -> `...51`
+    ## • `` -> `...52`
+    ## • `` -> `...53`
+    ## • `` -> `...54`
+    ## • `` -> `...55`
+    ## • `` -> `...56`
+    ## • `` -> `...57`
+    ## • `` -> `...58`
+    ## • `` -> `...59`
+    ## • `` -> `...60`
+    ## • `` -> `...61`
+    ## • `` -> `...62`
+    ## • `` -> `...63`
+    ## • `` -> `...64`
+    ## • `` -> `...65`
+    ## • `` -> `...66`
+    ## • `` -> `...67`
+    ## • `` -> `...68`
+    ## • `` -> `...69`
+    ## • `` -> `...70`
+    ## • `` -> `...71`
+    ## • `` -> `...72`
+    ## • `` -> `...73`
+    ## • `` -> `...74`
+    ## • `` -> `...75`
+    ## • `` -> `...76`
+    ## • `` -> `...77`
+    ## • `` -> `...78`
+    ## • `` -> `...79`
+    ## • `` -> `...80`
+    ## • `` -> `...81`
+    ## • `` -> `...82`
+    ## • `` -> `...83`
+    ## • `` -> `...84`
+    ## • `` -> `...85`
+    ## • `` -> `...86`
+    ## • `` -> `...87`
+    ## • `` -> `...88`
+    ## • `` -> `...89`
+    ## • `` -> `...90`
+    ## • `` -> `...91`
+    ## • `` -> `...92`
+    ## • `` -> `...93`
+    ## • `` -> `...94`
+    ## • `` -> `...95`
+    ## • `` -> `...96`
+    ## • `` -> `...97`
+    ## • `` -> `...98`
+    ## • `` -> `...99`
+    ## • `` -> `...100`
+    ## • `` -> `...101`
+    ## • `` -> `...102`
+    ## • `` -> `...103`
+    ## • `` -> `...104`
+    ## • `` -> `...105`
+    ## • `` -> `...106`
+    ## • `` -> `...107`
+    ## • `` -> `...108`
+    ## • `` -> `...109`
+    ## • `` -> `...110`
+    ## • `` -> `...111`
+    ## • `` -> `...112`
+    ## • `` -> `...113`
+    ## • `` -> `...114`
+    ## • `` -> `...115`
+    ## • `` -> `...116`
+    ## • `` -> `...117`
+    ## • `` -> `...118`
+    ## • `` -> `...119`
+    ## • `` -> `...120`
+    ## • `` -> `...121`
+    ## • `` -> `...122`
+    ## • `` -> `...123`
+    ## • `` -> `...124`
+    ## • `` -> `...125`
+    ## • `` -> `...126`
+    ## • `` -> `...127`
+    ## • `` -> `...128`
+
+``` r
 Genus_aldex_marker <- marker_table(Genus_aldex_microbiomeMarker) %>%
   as_tibble() %>% 
   arrange(order(gtools::mixedorder(enrich_group))) %>% 
@@ -1009,7 +1990,12 @@ Genus_ancom_da <- ancombc2(
   neg_lb = FALSE,
   alpha = 0.05,
   global = FALSE)
+```
 
+    ## Warning: The group variable has < 3 categories 
+    ## The multi-group comparisons (global/pairwise/dunnet/trend) will be deactivated
+
+``` r
 Genus_ancom_res <- data.frame(
   ASV = unlist(Genus_ancom_da$res$taxon),
   lfc = unlist(Genus_ancom_da$res$lfc_Watering_RegmDrought),  # log fold changes
@@ -1046,7 +2032,7 @@ Genus_ancombc2_marker <- Genus_sig_ancombc2 %>%
   mutate(tool = "ANCOMBC2")
 ```
 
-```{r Combine marker tables}
+``` r
 Phylum_marker <- Phylum_deseq_marker %>% 
   bind_rows(Phylum_aldex_marker) %>% 
   bind_rows(Phylum_ancombc2_marker)
@@ -1068,7 +2054,7 @@ Genus_marker <- Genus_deseq_marker %>%
   bind_rows(Genus_ancombc2_marker)
 ```
 
-```{r save marker tables}
+``` r
 save(Phylum_marker, file = "data/Phylum_marker.RData")
 save(Class_marker, file = "data/Class_marker.RData")
 save(Order_marker, file = "data/Order_marker.RData")
@@ -1078,7 +2064,7 @@ save(Genus_marker, file = "data/Genus_marker.RData")
 
 ## Display taxa/ASV intersection using UpSet plots
 
-```{r intersections}
+``` r
 ASV_intersection <- list(Wilcox = sig_wilcox_r$ASV, DESeq2 = deseq_marker$ASV, edgeR = edger_marker$ASV, ALDEx2 = aldex_marker$ASV, ANCOMBC2 = ancombc2_marker$ASV)
 top3_ASV_intersection <- list(DESeq2 = deseq_marker$ASV, ALDEx2 = aldex_marker$ASV, ANCOMBC2 = ancombc2_marker$ASV)
 Phylum_intersection <- list(DESeq2 = Phylum_deseq_marker$Phylum, ALDEx2 = Phylum_aldex_marker$Phylum, ANCOMBC2 = Phylum_ancombc2_marker$Phylum)
@@ -1088,7 +2074,7 @@ Family_intersection <- list(DESeq2 = Family_deseq_marker$Family, ALDEx2 = Family
 Genus_intersection <- list(DESeq2 = Genus_deseq_marker$Genus, ALDEx2 = Genus_aldex_marker$Genus, ANCOMBC2 = Genus_ancombc2_marker$Genus)
 ```
 
-```{r plot cols}
+``` r
 aldex_col <- "#bb0a21"
 ancombc_col <- "#280659"
 deseq_col <- "#faaf40"
@@ -1103,26 +2089,109 @@ root_col <- "#a35c00"
 rhizosphere_col <- "#007355"
 ```
 
-```{r UpsetPlot between different DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=8, fig.cap="**ASV Intersections between different DAA Tools on ASV level.** Upset plots displaying the overlap and uniqueness of significant taxa on ASV level identified by DAA methods (ALDEx2, DESeq2, ANCOM-BC2, non-parametric Wilcoxon rank-sum test, and edgeR). The horizontal bars show the total number of taxa for each tool, while the vertical bars show the number of shared taxa between corresponding sets, sorted by the total number of shared taxa. All tools use an alpha threshold of 0.05 for significance"}
+``` r
 upset(fromList(ASV_intersection), order.by = "freq", point.size=4, sets.bar.color=c(edger_col, wilcox_col, ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "ASVs per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Phylum UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=5, fig.cap="**Phylum Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant phyla identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of phyla for each tool, while the vertical bars show the number of shared phyla between corresponding sets, sorted by the total number of shared phyla. All tools use an alpha threshold of 0.05 for significance"}
+<figure>
+<img
+src="Metagenomics_Analysis_files/figure-gfm/UpsetPlot%20between%20different%20DAA%20Methods-1.png"
+alt="ASV Intersections between different DAA Tools on ASV level. Upset plots displaying the overlap and uniqueness of significant taxa on ASV level identified by DAA methods (ALDEx2, DESeq2, ANCOM-BC2, non-parametric Wilcoxon rank-sum test, and edgeR). The horizontal bars show the total number of taxa for each tool, while the vertical bars show the number of shared taxa between corresponding sets, sorted by the total number of shared taxa. All tools use an alpha threshold of 0.05 for significance" />
+<figcaption aria-hidden="true"><strong>ASV Intersections between
+different DAA Tools on ASV level.</strong> Upset plots displaying the
+overlap and uniqueness of significant taxa on ASV level identified by
+DAA methods (ALDEx2, DESeq2, ANCOM-BC2, non-parametric Wilcoxon rank-sum
+test, and edgeR). The horizontal bars show the total number of taxa for
+each tool, while the vertical bars show the number of shared taxa
+between corresponding sets, sorted by the total number of shared taxa.
+All tools use an alpha threshold of 0.05 for significance</figcaption>
+</figure>
+
+``` r
 upset(fromList(Phylum_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Phyla per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Class UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Class Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant classes identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of classes for each tool, while the vertical bars show the number of shared classes between corresponding sets, sorted by the total number of shared classes. All tools use an alpha threshold of 0.05 for significance"}
+<figure>
+<img
+src="Metagenomics_Analysis_files/figure-gfm/Phylum%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
+alt="Phylum Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant phyla identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of phyla for each tool, while the vertical bars show the number of shared phyla between corresponding sets, sorted by the total number of shared phyla. All tools use an alpha threshold of 0.05 for significance" />
+<figcaption aria-hidden="true"><strong>Phylum Intersections between
+different DAA Tools.</strong> Upset plots displaying the overlap and
+uniqueness of significant phyla identified by top 3 DAA methods (ALDEx2,
+DESeq2, ANCOM-BC2). The horizontal bars show the total number of phyla
+for each tool, while the vertical bars show the number of shared phyla
+between corresponding sets, sorted by the total number of shared phyla.
+All tools use an alpha threshold of 0.05 for significance</figcaption>
+</figure>
+
+``` r
 upset(fromList(Class_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Classes per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Order UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Order Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant orders identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of orders for each tool, while the vertical bars show the number of shared orders between corresponding sets, sorted by the total number of shared orders. All tools use an alpha threshold of 0.05 for significance"}
+<figure>
+<img
+src="Metagenomics_Analysis_files/figure-gfm/Class%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
+alt="Class Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant classes identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of classes for each tool, while the vertical bars show the number of shared classes between corresponding sets, sorted by the total number of shared classes. All tools use an alpha threshold of 0.05 for significance" />
+<figcaption aria-hidden="true"><strong>Class Intersections between
+different DAA Tools.</strong> Upset plots displaying the overlap and
+uniqueness of significant classes identified by top 3 DAA methods
+(ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number
+of classes for each tool, while the vertical bars show the number of
+shared classes between corresponding sets, sorted by the total number of
+shared classes. All tools use an alpha threshold of 0.05 for
+significance</figcaption>
+</figure>
+
+``` r
 upset(fromList(Order_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Orders per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Family UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Family Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant families identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of families for each tool, while the vertical bars show the number of shared families between corresponding sets, sorted by the total number of shared families. All tools use an alpha threshold of 0.05 for significance"}
+<figure>
+<img
+src="Metagenomics_Analysis_files/figure-gfm/Order%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
+alt="Order Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant orders identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of orders for each tool, while the vertical bars show the number of shared orders between corresponding sets, sorted by the total number of shared orders. All tools use an alpha threshold of 0.05 for significance" />
+<figcaption aria-hidden="true"><strong>Order Intersections between
+different DAA Tools.</strong> Upset plots displaying the overlap and
+uniqueness of significant orders identified by top 3 DAA methods
+(ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number
+of orders for each tool, while the vertical bars show the number of
+shared orders between corresponding sets, sorted by the total number of
+shared orders. All tools use an alpha threshold of 0.05 for
+significance</figcaption>
+</figure>
+
+``` r
 upset(fromList(Family_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Families per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
 
-```{r Genus UpsetPlot between top3 DAA Methods, error=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap="**Genus Intersections between different DAA Tools.** Upset plots displaying the overlap and uniqueness of significant genera identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of genera for each tool, while the vertical bars show the number of shared genera between corresponding sets, sorted by the total number of shared genera. All tools use an alpha threshold of 0.05 for significance"}
+<figure>
+<img
+src="Metagenomics_Analysis_files/figure-gfm/Family%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
+alt="Family Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant families identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of families for each tool, while the vertical bars show the number of shared families between corresponding sets, sorted by the total number of shared families. All tools use an alpha threshold of 0.05 for significance" />
+<figcaption aria-hidden="true"><strong>Family Intersections between
+different DAA Tools.</strong> Upset plots displaying the overlap and
+uniqueness of significant families identified by top 3 DAA methods
+(ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number
+of families for each tool, while the vertical bars show the number of
+shared families between corresponding sets, sorted by the total number
+of shared families. All tools use an alpha threshold of 0.05 for
+significance</figcaption>
+</figure>
+
+``` r
 upset(fromList(Genus_intersection), order.by = "freq", point.size=4, sets.bar.color=c(ancombc_col, deseq_col, aldex_col), mainbar.y.label = "Tool Intersections", sets.x.label = "Genera per Tool", text.scale = c(1.5, 1, 1, 1, 1.5, 1.2))
 ```
+
+<figure>
+<img
+src="Metagenomics_Analysis_files/figure-gfm/Genus%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
+alt="Genus Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant genera identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of genera for each tool, while the vertical bars show the number of shared genera between corresponding sets, sorted by the total number of shared genera. All tools use an alpha threshold of 0.05 for significance" />
+<figcaption aria-hidden="true"><strong>Genus Intersections between
+different DAA Tools.</strong> Upset plots displaying the overlap and
+uniqueness of significant genera identified by top 3 DAA methods
+(ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number
+of genera for each tool, while the vertical bars show the number of
+shared genera between corresponding sets, sorted by the total number of
+shared genera. All tools use an alpha threshold of 0.05 for
+significance</figcaption>
+</figure>
