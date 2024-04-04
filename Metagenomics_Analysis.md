@@ -2,7 +2,7 @@ Metagenomics Analysis
 ================
 Michelle Hagen
 
-Perform Metagenomics analysis to the *‘drought-stress’ dataset* from
+Perform 16S rRNA-based metagenomic analysis to the *‘drought-stress’ dataset* from
 Naylor et al., 2017:
 
 Naylor, D., DeGraaf, S., Purdom, E., Coleman-Derr, D.: Drought and host
@@ -131,39 +131,7 @@ ps_rare_filtered
     ## sample_data() Sample Data:       [ 560 samples by 3 sample variables ]
     ## tax_table()   Taxonomy Table:    [ 3276 taxa by 7 taxonomic ranks ]
 
-Remove 20 % of samples from the dataset to create a hold-out dataset for
-testing the ML model.
-
-``` r
-factor_to_maintain_ratio <- "Watering_Regm"
-sample_data(ps_rare_filtered)$Watering_Regm <- factor(sample_data(ps_rare_filtered)$Watering_Regm)
-
-# Determine 20% of the total number of samples
-percent_to_select <- 0.20
-total_samples <- nsamples(ps_rare_filtered)
-num_samples_to_select <- round(total_samples * 0.20)
-
-# Calculate the number of samples to select for each level of the factor
-samples_per_level <- table(sample_data(ps_rare_filtered)[["Watering_Regm"]])
-samples_to_select_per_level <- lapply(samples_per_level, function(x) round(x * 0.20))
-
-# Randomly select samples from each level of the factor
-selected_samples <- list()
-for (level in levels(sample_data(ps_rare_filtered)[["Watering_Regm"]])) {
-  level_indices <- which(sample_data(ps_rare_filtered)[["Watering_Regm"]] == level)
-  selected_indices <- sample(level_indices, samples_to_select_per_level[[level]])
-  selected_samples[[level]] <- rownames(sample_data(ps_rare_filtered))[selected_indices]
-}
-
-# Combine selected samples into two separate datasets
-selected_sample_names <- unlist(selected_samples)
-remaining_sample_names <- setdiff(rownames(sample_data(ps_rare_filtered)), selected_sample_names)
-
-ps_hold_out <- prune_samples(selected_sample_names, ps_rare_filtered)
-ps_rare_filtered <- prune_samples(remaining_sample_names, ps_rare_filtered)
-```
-
-Remaining number of Control and Drought samples in the dataset:
+Number of Control and Drought samples in the dataset:
 
 ``` r
 table(sample_data(ps_rare_filtered)[["Watering_Regm"]])
@@ -171,17 +139,7 @@ table(sample_data(ps_rare_filtered)[["Watering_Regm"]])
 
     ## 
     ## Control Drought 
-    ##     234     214
-
-Remaining number of Control and Drought samples in the hold-out dataset:
-
-``` r
-table(sample_data(ps_hold_out)[["Watering_Regm"]])
-```
-
-    ## 
-    ## Control Drought 
-    ##      58      54
+    ##     292     268
 
 # Diversity Analysis
 
@@ -305,11 +263,12 @@ egg::ggarrange(p_ra_top10_Phylum, p_ra_top10_Class, p_ra_top10_Order, p_ra_top10
 <figure>
 <img
 src="Metagenomics_Analysis_files/figure-gfm/top10%20rel%20abundances-1.png"
-alt="Relative Abundances per Rank. Bar plots displaying the relative abundance of the top 10 taxa between the ’Control’ and ’Drought’ group on Phylum, Class, Order, Family and Genus level in alphabetical order." />
-<figcaption aria-hidden="true"><strong>Relative Abundances per
-Rank.</strong> Bar plots displaying the relative abundance of the top 10
-taxa between the ’Control’ and ’Drought’ group on Phylum, Class, Order,
-Family and Genus level in alphabetical order.</figcaption>
+alt="Relative Abundances per Rank of the Grass-Drought Dataset. Bar plots displaying the relative abundance of the top 10 taxa between the ’Control’ and ’Drought’ group on Phylum, Class, Order, Family and Genus level in alphabetical order." />
+<figcaption aria-hidden="true"><strong>Relative Abundances per Rank of
+the Grass-Drought Dataset.</strong> Bar plots displaying the relative
+abundance of the top 10 taxa between the ’Control’ and ’Drought’ group
+on Phylum, Class, Order, Family and Genus level in alphabetical
+order.</figcaption>
 </figure>
 
 ## Alpha Diversity
@@ -345,14 +304,14 @@ adiv_wr
 <figure>
 <img
 src="Metagenomics_Analysis_files/figure-gfm/Alpha%20Diversity-1.png"
-alt="Alpha Diversity. Alpha diversity plot comparing the Control (blue) and ’Drought’ (red) watering regimes. (A) Boxplot of Shannon’s Diversity index for all samples comparing the ‘Control’ (blue) and ’Drought’ (red) watering regimes. Significance was determined using a non-parametric Wilcoxon rank sum test (* p &lt;0.05, ** p &lt;0.01, *** p &lt;0.001, **** p &lt;0.0001)." />
-<figcaption aria-hidden="true"><strong>Alpha Diversity.</strong> Alpha
-diversity plot comparing the Control (blue) and ’Drought’ (red) watering
-regimes. (A) Boxplot of Shannon’s Diversity index for all samples
-comparing the ‘Control’ (blue) and ’Drought’ (red) watering regimes.
-Significance was determined using a non-parametric Wilcoxon rank sum
-test (* p &lt;0.05, ** p &lt;0.01, *** p &lt;0.001, **** p
-&lt;0.0001).</figcaption>
+alt="Alpha Diversity for the Grass-Drought Dataset. Alpha diversity plot comparing the Control (blue) and ’Drought’ (red) watering regimes. (A) Boxplot of Shannon’s Diversity index for all samples comparing the ‘Control’ (blue) and ’Drought’ (red) watering regimes. Significance was determined using a non-parametric Wilcoxon rank sum test (* p &lt;0.05, ** p &lt;0.01, *** p &lt;0.001, **** p &lt;0.0001)." />
+<figcaption aria-hidden="true"><strong>Alpha Diversity for the
+Grass-Drought Dataset.</strong> Alpha diversity plot comparing the
+Control (blue) and ’Drought’ (red) watering regimes. (A) Boxplot of
+Shannon’s Diversity index for all samples comparing the ‘Control’ (blue)
+and ’Drought’ (red) watering regimes. Significance was determined using
+a non-parametric Wilcoxon rank sum test (* p &lt;0.05, ** p &lt;0.01,
+*** p &lt;0.001, **** p &lt;0.0001).</figcaption>
 </figure>
 
 ## Beta Diversity
@@ -377,10 +336,11 @@ pcoa_wr
 
 <figure>
 <img src="Metagenomics_Analysis_files/figure-gfm/Beta%20diversity-1.png"
-alt="Beta Diversity. Principal Coordinate plot using Bray-Curtis dissimilarities colored by the ’Control’ (blue) and ’Drought’ (red) watering regimes." />
-<figcaption aria-hidden="true"><strong>Beta Diversity.</strong>
-Principal Coordinate plot using Bray-Curtis dissimilarities colored by
-the ’Control’ (blue) and ’Drought’ (red) watering regimes.</figcaption>
+alt="Beta Diversity for the Grass-Drought Dataset. Principal Coordinate plot using Bray-Curtis dissimilarities colored by the ’Control’ (blue) and ’Drought’ (red) watering regimes." />
+<figcaption aria-hidden="true"><strong>Beta Diversity for the
+Grass-Drought Dataset.</strong> Principal Coordinate plot using
+Bray-Curtis dissimilarities colored by the ’Control’ (blue) and
+’Drought’ (red) watering regimes.</figcaption>
 </figure>
 
 ## Differential Abundance Analysis
@@ -2096,15 +2056,16 @@ upset(fromList(ASV_intersection), order.by = "freq", point.size=4, sets.bar.colo
 <figure>
 <img
 src="Metagenomics_Analysis_files/figure-gfm/UpsetPlot%20between%20different%20DAA%20Methods-1.png"
-alt="ASV Intersections between different DAA Tools on ASV level. Upset plots displaying the overlap and uniqueness of significant taxa on ASV level identified by DAA methods (ALDEx2, DESeq2, ANCOM-BC2, non-parametric Wilcoxon rank-sum test, and edgeR). The horizontal bars show the total number of taxa for each tool, while the vertical bars show the number of shared taxa between corresponding sets, sorted by the total number of shared taxa. All tools use an alpha threshold of 0.05 for significance" />
+alt="ASV Intersections between different DAA Tools on ASV level of the Grass-Drought Dataset. Upset plots displaying the overlap and uniqueness of significant taxa on ASV level identified by DAA methods (ALDEx2, DESeq2, ANCOM-BC2, non-parametric Wilcoxon rank-sum test, and edgeR). The horizontal bars show the total number of taxa for each tool, while the vertical bars show the number of shared taxa between corresponding sets, sorted by the total number of shared taxa. All tools use an alpha threshold of 0.05 for significance" />
 <figcaption aria-hidden="true"><strong>ASV Intersections between
-different DAA Tools on ASV level.</strong> Upset plots displaying the
-overlap and uniqueness of significant taxa on ASV level identified by
-DAA methods (ALDEx2, DESeq2, ANCOM-BC2, non-parametric Wilcoxon rank-sum
-test, and edgeR). The horizontal bars show the total number of taxa for
-each tool, while the vertical bars show the number of shared taxa
-between corresponding sets, sorted by the total number of shared taxa.
-All tools use an alpha threshold of 0.05 for significance</figcaption>
+different DAA Tools on ASV level of the Grass-Drought Dataset.</strong>
+Upset plots displaying the overlap and uniqueness of significant taxa on
+ASV level identified by DAA methods (ALDEx2, DESeq2, ANCOM-BC2,
+non-parametric Wilcoxon rank-sum test, and edgeR). The horizontal bars
+show the total number of taxa for each tool, while the vertical bars
+show the number of shared taxa between corresponding sets, sorted by the
+total number of shared taxa. All tools use an alpha threshold of 0.05
+for significance</figcaption>
 </figure>
 
 ``` r
@@ -2114,14 +2075,15 @@ upset(fromList(Phylum_intersection), order.by = "freq", point.size=4, sets.bar.c
 <figure>
 <img
 src="Metagenomics_Analysis_files/figure-gfm/Phylum%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
-alt="Phylum Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant phyla identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of phyla for each tool, while the vertical bars show the number of shared phyla between corresponding sets, sorted by the total number of shared phyla. All tools use an alpha threshold of 0.05 for significance" />
+alt="Phylum Intersections between different DAA Tools on the Grass-Drought Dataset. Upset plots displaying the overlap and uniqueness of significant phyla identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of phyla for each tool, while the vertical bars show the number of shared phyla between corresponding sets, sorted by the total number of shared phyla. All tools use an alpha threshold of 0.05 for significance" />
 <figcaption aria-hidden="true"><strong>Phylum Intersections between
-different DAA Tools.</strong> Upset plots displaying the overlap and
-uniqueness of significant phyla identified by top 3 DAA methods (ALDEx2,
-DESeq2, ANCOM-BC2). The horizontal bars show the total number of phyla
-for each tool, while the vertical bars show the number of shared phyla
-between corresponding sets, sorted by the total number of shared phyla.
-All tools use an alpha threshold of 0.05 for significance</figcaption>
+different DAA Tools on the Grass-Drought Dataset.</strong> Upset plots
+displaying the overlap and uniqueness of significant phyla identified by
+top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show
+the total number of phyla for each tool, while the vertical bars show
+the number of shared phyla between corresponding sets, sorted by the
+total number of shared phyla. All tools use an alpha threshold of 0.05
+for significance</figcaption>
 </figure>
 
 ``` r
@@ -2131,15 +2093,15 @@ upset(fromList(Class_intersection), order.by = "freq", point.size=4, sets.bar.co
 <figure>
 <img
 src="Metagenomics_Analysis_files/figure-gfm/Class%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
-alt="Class Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant classes identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of classes for each tool, while the vertical bars show the number of shared classes between corresponding sets, sorted by the total number of shared classes. All tools use an alpha threshold of 0.05 for significance" />
+alt="Class Intersections between different DAA Tools on the Grass-Drought Dataset. Upset plots displaying the overlap and uniqueness of significant classes identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of classes for each tool, while the vertical bars show the number of shared classes between corresponding sets, sorted by the total number of shared classes. All tools use an alpha threshold of 0.05 for significance" />
 <figcaption aria-hidden="true"><strong>Class Intersections between
-different DAA Tools.</strong> Upset plots displaying the overlap and
-uniqueness of significant classes identified by top 3 DAA methods
-(ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number
-of classes for each tool, while the vertical bars show the number of
-shared classes between corresponding sets, sorted by the total number of
-shared classes. All tools use an alpha threshold of 0.05 for
-significance</figcaption>
+different DAA Tools on the Grass-Drought Dataset.</strong> Upset plots
+displaying the overlap and uniqueness of significant classes identified
+by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars
+show the total number of classes for each tool, while the vertical bars
+show the number of shared classes between corresponding sets, sorted by
+the total number of shared classes. All tools use an alpha threshold of
+0.05 for significance</figcaption>
 </figure>
 
 ``` r
@@ -2149,15 +2111,15 @@ upset(fromList(Order_intersection), order.by = "freq", point.size=4, sets.bar.co
 <figure>
 <img
 src="Metagenomics_Analysis_files/figure-gfm/Order%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
-alt="Order Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant orders identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of orders for each tool, while the vertical bars show the number of shared orders between corresponding sets, sorted by the total number of shared orders. All tools use an alpha threshold of 0.05 for significance" />
+alt="Order Intersections between different DAA Tools on the Grass-Drought Dataset. Upset plots displaying the overlap and uniqueness of significant orders identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of orders for each tool, while the vertical bars show the number of shared orders between corresponding sets, sorted by the total number of shared orders. All tools use an alpha threshold of 0.05 for significance" />
 <figcaption aria-hidden="true"><strong>Order Intersections between
-different DAA Tools.</strong> Upset plots displaying the overlap and
-uniqueness of significant orders identified by top 3 DAA methods
-(ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number
-of orders for each tool, while the vertical bars show the number of
-shared orders between corresponding sets, sorted by the total number of
-shared orders. All tools use an alpha threshold of 0.05 for
-significance</figcaption>
+different DAA Tools on the Grass-Drought Dataset.</strong> Upset plots
+displaying the overlap and uniqueness of significant orders identified
+by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars
+show the total number of orders for each tool, while the vertical bars
+show the number of shared orders between corresponding sets, sorted by
+the total number of shared orders. All tools use an alpha threshold of
+0.05 for significance</figcaption>
 </figure>
 
 ``` r
@@ -2167,15 +2129,15 @@ upset(fromList(Family_intersection), order.by = "freq", point.size=4, sets.bar.c
 <figure>
 <img
 src="Metagenomics_Analysis_files/figure-gfm/Family%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
-alt="Family Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant families identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of families for each tool, while the vertical bars show the number of shared families between corresponding sets, sorted by the total number of shared families. All tools use an alpha threshold of 0.05 for significance" />
+alt="Family Intersections between different DAA Tools on the Grass-Drought Dataset. Upset plots displaying the overlap and uniqueness of significant families identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of families for each tool, while the vertical bars show the number of shared families between corresponding sets, sorted by the total number of shared families. All tools use an alpha threshold of 0.05 for significance" />
 <figcaption aria-hidden="true"><strong>Family Intersections between
-different DAA Tools.</strong> Upset plots displaying the overlap and
-uniqueness of significant families identified by top 3 DAA methods
-(ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number
-of families for each tool, while the vertical bars show the number of
-shared families between corresponding sets, sorted by the total number
-of shared families. All tools use an alpha threshold of 0.05 for
-significance</figcaption>
+different DAA Tools on the Grass-Drought Dataset.</strong> Upset plots
+displaying the overlap and uniqueness of significant families identified
+by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars
+show the total number of families for each tool, while the vertical bars
+show the number of shared families between corresponding sets, sorted by
+the total number of shared families. All tools use an alpha threshold of
+0.05 for significance</figcaption>
 </figure>
 
 ``` r
@@ -2185,13 +2147,13 @@ upset(fromList(Genus_intersection), order.by = "freq", point.size=4, sets.bar.co
 <figure>
 <img
 src="Metagenomics_Analysis_files/figure-gfm/Genus%20UpsetPlot%20between%20top3%20DAA%20Methods-1.png"
-alt="Genus Intersections between different DAA Tools. Upset plots displaying the overlap and uniqueness of significant genera identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of genera for each tool, while the vertical bars show the number of shared genera between corresponding sets, sorted by the total number of shared genera. All tools use an alpha threshold of 0.05 for significance" />
+alt="Genus Intersections between different DAA Tools on the Grass-Drought Dataset. Upset plots displaying the overlap and uniqueness of significant genera identified by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number of genera for each tool, while the vertical bars show the number of shared genera between corresponding sets, sorted by the total number of shared genera. All tools use an alpha threshold of 0.05 for significance" />
 <figcaption aria-hidden="true"><strong>Genus Intersections between
-different DAA Tools.</strong> Upset plots displaying the overlap and
-uniqueness of significant genera identified by top 3 DAA methods
-(ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars show the total number
-of genera for each tool, while the vertical bars show the number of
-shared genera between corresponding sets, sorted by the total number of
-shared genera. All tools use an alpha threshold of 0.05 for
-significance</figcaption>
+different DAA Tools on the Grass-Drought Dataset.</strong> Upset plots
+displaying the overlap and uniqueness of significant genera identified
+by top 3 DAA methods (ALDEx2, DESeq2, ANCOM-BC2). The horizontal bars
+show the total number of genera for each tool, while the vertical bars
+show the number of shared genera between corresponding sets, sorted by
+the total number of shared genera. All tools use an alpha threshold of
+0.05 for significance</figcaption>
 </figure>
