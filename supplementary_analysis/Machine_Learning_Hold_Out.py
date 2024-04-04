@@ -10,6 +10,17 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import roc_auc_score
 import pickle
 
+"""
+This script performs nested cross-validation with hyperparameter tuning 
+on the grass-drought dataset after removing 20% of the samples randomly 
+while still preserving the ratio between 'Drought' and 'Control' samples 
+and using the samples that were removed as an independent hold-out dataset. 
+Both datasets are preprocessed exactly the same as the initial grass-drought 
+dataset and feature tables were created where the reduced dataset contained 
+448 samples and the hold-out dataset contained 112 samples. 
+Performance was tested for the nested cross-validation and the independent 
+hold-out dataset.
+"""
 
 ranks = ['phylum', 'class', 'order', 'family', 'genus']
 ml_model = 'RFC'
