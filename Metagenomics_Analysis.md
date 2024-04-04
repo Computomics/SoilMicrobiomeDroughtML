@@ -36,13 +36,13 @@ library(ggpubr); print(paste0("ggpubr, version: ", packageVersion("ggpubr")))
 library(microbiomeMarker); print(paste0("microbiomeMarker, version: ", packageVersion("microbiomeMarker")))
 ```
 
-    ## [1] "microbiomeMarker, version: 1.6.0"
+    ## [1] "microbiomeMarker, version: 1.4.0"
 
 ``` r
 library(ANCOMBC); print(paste0("ANCOMBC, version: ", packageVersion("ANCOMBC")))
 ```
 
-    ## [1] "ANCOMBC, version: 2.2.2"
+    ## [1] "ANCOMBC, version: 2.0.2"
 
 ``` r
 library(UpSetR); print(paste0("UpSetR, version: ", packageVersion("UpSetR")))
