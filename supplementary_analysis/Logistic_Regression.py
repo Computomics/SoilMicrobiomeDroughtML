@@ -20,7 +20,7 @@ ml_model = 'LR'
     
 for rank in ranks:
 
-    df = pd.read_csv(f'feature_tbl_{rank}.csv')
+    df = pd.read_csv(f'data/feature_tbl_{rank}.csv')
     df = df.drop(df.columns[0], axis=1)
 
     X, y = df.drop('Watering_Regm', axis=1), df['Watering_Regm']
@@ -90,17 +90,19 @@ for rank in ranks:
         auc_results.append(auc)
 
         # save best estimator
-        filename = f'{rank}_{ml_model}_{idx+1}.sav'
+        filename = f'pickle/{rank}_{ml_model}_{idx+1}.sav'
         pickle.dump(best_model, open(filename, 'wb'))
         
         idx += 1
 
     # summarize the estimated performance of the model
-    with open(f'performance_{rank}_{ml_model}.txt', 'w') as file:
-        # Write the metrics results to the file
-        file.write('Accuracy: %.3f (%.3f), F1: %.3f (%.3f), Precision: %.3f (%.3f), Recall: %.3f (%.3f)\n' % (
+    with open(f'tables/performance_{rank}_{ml_model}.txt', 'w') as file:
+
+        file.write('Accuracy: %.3f (%.3f), F1: %.3f (%.3f), Precision: %.3f (%.3f), Recall: %.3f (%.3f), AUC: %.3f (%.3f)\n' % (
             np.mean(accuracy_results), np.std(accuracy_results),
             np.mean(f1_results), np.std(f1_results),
             np.mean(precision_results), np.std(precision_results),
-            np.mean(recall_results), np.std(recall_results)
+            np.mean(recall_results), np.std(recall_results),
+            np.mean(auc_results), np.std(auc_results)
+            
         ))

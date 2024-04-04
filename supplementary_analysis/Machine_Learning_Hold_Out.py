@@ -107,11 +107,12 @@ for rank in ranks:
     # summarize the estimated performance of the model
     with open(f'performance_{rank}_{ml_model}.txt', 'w') as file:
 
-        file.write('Accuracy: %.3f (%.3f), F1: %.3f (%.3f), Precision: %.3f (%.3f), Recall: %.3f (%.3f)\n' % (
+        file.write('Accuracy: %.3f (%.3f), F1: %.3f (%.3f), Precision: %.3f (%.3f), Recall: %.3f (%.3f), AUC: %.3f (%.3f)\n' % (
             np.mean(accuracy_results), np.std(accuracy_results),
             np.mean(f1_results), np.std(f1_results),
             np.mean(precision_results), np.std(precision_results),
-            np.mean(recall_results), np.std(recall_results)
+            np.mean(recall_results), np.std(recall_results),
+            np.mean(auc_results), np.std(auc_results)
             
         ))
 
@@ -147,10 +148,11 @@ for rank in ranks:
         
     with open(f'hold_out_performance_{rank}_{ml_model}.txt', 'w') as file:
         
-        file.write('Accuracy: %.3f (%.3f), F1: %.3f (%.3f), Precision: %.3f (%.3f), Recall: %.3f (%.3f)\n' % (
+        file.write('Accuracy: %.3f (%.3f), F1: %.3f (%.3f), Precision: %.3f (%.3f), Recall: %.3f (%.3f), AUC: %.3f (%.3f)\n' % (
             np.mean(accuracy_results), np.std(accuracy_results),
             np.mean(f1_results), np.std(f1_results),
             np.mean(precision_results), np.std(precision_results),
-            np.mean(recall_results), np.std(recall_results)
+            np.mean(recall_results), np.std(recall_results),
+            np.mean(auc_results), np.std(auc_results)
             
     ))
