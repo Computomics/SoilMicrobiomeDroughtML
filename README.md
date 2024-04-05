@@ -14,7 +14,7 @@ This repository contains the code used for 16S rRNA-based metagenomics analysis 
     - `DADA2_ASV_taxonomy.Rdata`: Table containing taxonomic annotation per ASV of the grass-drought dataset
     - `feature_tbl_{phylum/class/order/family/genus}.csv`: Table containing relative abundances of phyla/classes/orders/families/genera per sample with watering regime as target of the grass-drought dataset
   - `supplementary_analysis`:
-    - `Logistic_Regression.py`: Python script running Nested CV of Logistic Regression Classifier with the grass-drought dataset
+    - `Logistic_Regression.py`: Python script running Nested CV with Logistic Regression Classifier on the grass-drought dataset
     - `Machine_Learning_Hold_Out.py`: Python script running Nested CV of Random Forest Classifier on the grass-drought dataset after the creation of a hold-out dataset from the grass-drought dataset and predicting on the hold-out dataset
 
 The scripts need to be executed in the following order:
