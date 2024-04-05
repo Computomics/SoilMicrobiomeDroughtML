@@ -264,7 +264,7 @@ generate_heatmap_and_barplots(Phylum_data)
 
 <figure>
 <img src="Marker_Taxa_files/figure-gfm/Phylum%20hm-1.png"
-alt="Phylum Enrichment, Significance and Importance by DAA Tools and SHAP Values. Binary heatmap showing the enrichment of the top 15 significant phyla from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
+alt="Phylum Enrichment, Significance and Importance by DAA Tools and SHAP Values of the Grass-Drought Dataset. Binary heatmap showing the enrichment of the top 15 significant phyla from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
 <figcaption aria-hidden="true"><strong>Phylum Enrichment, Significance
 and Importance by DAA Tools and SHAP Values.</strong> Binary heatmap
 showing the enrichment of the top 15 significant phyla from ANCOM-BC2
@@ -282,7 +282,7 @@ generate_heatmap_and_barplots(Class_data)
 
 <figure>
 <img src="Marker_Taxa_files/figure-gfm/Class%20hm-1.png"
-alt="Class Enrichment, Significance and Importance by DAA Tools and SHAP Values. Binary heatmap showing the enrichment of the top 25 significant classes from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
+alt="Class Enrichment, Significance and Importance by DAA Tools and SHAP Values of the Grass-Drought Dataset. Binary heatmap showing the enrichment of the top 25 significant classes from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
 <figcaption aria-hidden="true"><strong>Class Enrichment, Significance
 and Importance by DAA Tools and SHAP Values.</strong> Binary heatmap
 showing the enrichment of the top 25 significant classes from ANCOM-BC2
@@ -300,7 +300,7 @@ generate_heatmap_and_barplots(Order_data)
 
 <figure>
 <img src="Marker_Taxa_files/figure-gfm/Order%20hm-1.png"
-alt="Order Enrichment, Significance and Importance by DAA Tools and SHAP Values. Binary heatmap showing the enrichment of the top 25 significant orders from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
+alt="Order Enrichment, Significance and Importance by DAA Tools and SHAP Values of the Grass-Drought Dataset. Binary heatmap showing the enrichment of the top 25 significant orders from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
 <figcaption aria-hidden="true"><strong>Order Enrichment, Significance
 and Importance by DAA Tools and SHAP Values.</strong> Binary heatmap
 showing the enrichment of the top 25 significant orders from ANCOM-BC2
@@ -318,7 +318,7 @@ generate_heatmap_and_barplots(Family_data)
 
 <figure>
 <img src="Marker_Taxa_files/figure-gfm/Family%20hm-1.png"
-alt="Family Enrichment, Significance and Importance by DAA Tools and SHAP Values. Binary heatmap showing the enrichment of the top 25 significant families from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
+alt="Family Enrichment, Significance and Importance by DAA Tools and SHAP Values of the Grass-Drought Dataset. Binary heatmap showing the enrichment of the top 25 significant families from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
 <figcaption aria-hidden="true"><strong>Family Enrichment, Significance
 and Importance by DAA Tools and SHAP Values.</strong> Binary heatmap
 showing the enrichment of the top 25 significant families from ANCOM-BC2
@@ -336,7 +336,7 @@ generate_heatmap_and_barplots(Genus_data)
 
 <figure>
 <img src="Marker_Taxa_files/figure-gfm/Genus%20hm-1.png"
-alt="Genera Enrichment, Significance and Importance by DAA Tools and SHAP Values. Binary heatmap showing the enrichment of the top 25 significant genera from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
+alt="Genera Enrichment, Significance and Importance by DAA Tools and SHAP Values of the Grass-Drought Dataset. Binary heatmap showing the enrichment of the top 25 significant genera from ANCOM-BC2 between Control (blue) and Drought (red) groups for the three methods used for DAA (DESeq2, ANCOM-BC2, ALDEx2) with an alpha &lt;0.05, and SHAP values obtained from the RFC. Corresponding bar plots comparing -log_{10}(p_adjust) values (orange) and mean(|SHAP values|) (green)." />
 <figcaption aria-hidden="true"><strong>Genera Enrichment, Significance
 and Importance by DAA Tools and SHAP Values.</strong> Binary heatmap
 showing the enrichment of the top 25 significant genera from ANCOM-BC2
