@@ -89,7 +89,7 @@ for rank in ranks:
         f1 = f1_score(y_test, y_pred)
         prec = precision_score(y_test, y_pred)
         rec = recall_score(y_test, y_pred)
-        auc = roc_auc_score(y_test, y_pred)
+        auc = roc_auc_score(y_test, best_model.predict_proba(X_test)[:,1])
 
         # store the result
         accuracy_results.append(acc)
@@ -142,9 +142,7 @@ for rank in ranks:
         f1_results.append(f1_score(y_test, y_pred))
         precision_results.append(precision_score(y_test, y_pred))
         recall_results.append(recall_score(y_test, y_pred))
-        
-        y_pred_proba = model.predict_proba(X_test)[:, 1]
-        auc_results.append(roc_auc_score(y_test, y_pred_proba))
+        auc_results.append(roc_auc_score(y_test, model.predict_proba(X_test)[:,1]))
         
     with open(f'hold_out_performance_{rank}_{ml_model}.txt', 'w') as file:
         

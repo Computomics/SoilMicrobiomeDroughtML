@@ -80,7 +80,7 @@ for rank in ranks:
         f1 = f1_score(y_test, y_pred)
         prec = precision_score(y_test, y_pred)
         rec = recall_score(y_test, y_pred)
-        auc = roc_auc_score(y_test, y_pred)
+        auc = roc_auc_score(y_test, best_model.predict_proba(X_test)[:,1])
 
         # store the result
         accuracy_results.append(acc)
