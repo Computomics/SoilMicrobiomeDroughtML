@@ -1,6 +1,6 @@
 # Interpretable Machine Learning Decodes Soil Microbiome’s Response to Drought Stress
 
-**Link to Publication:** https://environmentalmicrobiome.biomedcentral.com/articles/10.1186/s40793-024-00578-1 
+**Link to Publication:** [https://environmentalmicrobiome.biomedcentral.com/articles/10.1186/s40793-024-00578-1 ](https://doi.org/10.1186/s40793-024-00578-1)
 
 This repository contains the code used for 16S rRNA-based metagenomics analysis and ML applications for drought stress identification in the soil metagenome using a dataset from Naylor *et al.* (2017) further refered to as the **grass-drought** dataset.
 
